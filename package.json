@@ -3,10 +3,11 @@
   "version": "1.0.0",
   "description": "React component for interactive representation of draughts game",
   "main": "lib/index.js",
+  "module": "draughts-board",
   "types": "lib/index.d.ts",
   "scripts": {
     "test": "jest --config jest-config.json --watch",
-    "prepare": "babel src --out-dir lib --extensions \".ts,.tsx\""
+    "prepare": "rollup -c"
   },
   "repository": {
     "type": "git",
@@ -20,18 +21,17 @@
   "author": "",
   "license": "ISC",
   "devDependencies": {
-    "@babel/cli": "^7.6.4",
-    "@babel/core": "^7.6.2",
-    "@babel/preset-env": "^7.6.2",
-    "@babel/preset-react": "^7.0.0",
-    "@babel/preset-typescript": "^7.6.0",
     "@testing-library/dom": "^6.8.1",
+    "@timdp/rollup-plugin-image": "^1.0.3",
     "@types/jest": "^24.0.19",
     "@types/react": "^16.9.5",
     "@types/react-dom": "^16.9.1",
     "jest": "^24.9.0",
     "react": "^16.10.1",
     "react-dom": "^16.10.1",
+    "rollup": "^1.25.0",
+    "rollup-plugin-inline-image": "^0.1.0",
+    "rollup-plugin-typescript2": "^0.24.3",
     "ts-jest": "^24.1.0",
     "tslint": "^5.20.0",
     "typedoc": "^0.15.0",
