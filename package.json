@@ -2,8 +2,8 @@
   "name": "draughts-board",
   "version": "1.0.0",
   "description": "React component for interactive representation of draughts game",
-  "main": "lib/index.js",
-  "module": "draughts-board",
+  "main": "dist/index.js",
+  "module": "lib/index.js",
   "types": "lib/index.d.ts",
   "scripts": {
     "test": "jest --config jest-config.json --watch",
@@ -11,7 +11,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/sldsrg/draughts-sboard.git"
+    "url": "git+https://github.com/sldsrg/draughts-board.git"
   },
   "bugs": {
     "url": "https://github.com/sldsrg/draughts-board/issues"
@@ -22,7 +22,6 @@
   "license": "ISC",
   "devDependencies": {
     "@testing-library/dom": "^6.8.1",
-    "@timdp/rollup-plugin-image": "^1.0.3",
     "@types/jest": "^24.0.19",
     "@types/react": "^16.9.5",
     "@types/react-dom": "^16.9.1",
@@ -30,7 +29,7 @@
     "react": "^16.10.1",
     "react-dom": "^16.10.1",
     "rollup": "^1.25.0",
-    "rollup-plugin-inline-image": "^0.1.0",
+    "rollup-plugin-rebase": "^3.2.2",
     "rollup-plugin-typescript2": "^0.24.3",
     "ts-jest": "^24.1.0",
     "tslint": "^5.20.0",

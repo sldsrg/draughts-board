@@ -10,9 +10,17 @@ export default {
       format: 'esm'
     }
   ],
-  external: [...Object.keys(pkg.dependencies || {}), ...Object.keys(pkg.peerDependencies || {})],
+  external: [
+    ...Object.keys(pkg.dependencies || {}),
+    ...Object.keys(pkg.peerDependencies || {})
+  ],
   plugins: [
-    rebase(),
+    rebase({
+      verbose: true,
+      keepName: true,
+      outputFolder: 'lib',
+      assetFolder: 'img'
+    }),
     typescript({
       typescript: require('typescript')
     })
