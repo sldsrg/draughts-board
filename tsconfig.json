@@ -8,11 +8,11 @@
     "moduleResolution": "node",
     "noImplicitAny": true,
     "strictNullChecks": true,
-    "target": "esnext",
-    "lib": ["es2015", "dom.iterable", "es2016.array.include", "es2017.object", "dom"],
+    "target": "es6",
+    "lib": ["dom", "dom.iterable", "esnext"],
+    "skipLibCheck": true,
     "module": "es6",
-    "outDir": "./lib",
-    "typeRoots": ["./node_modules/@types"]
+    "outDir": "./lib"
   },
   "typedocOptions": {
     "mode": "file",

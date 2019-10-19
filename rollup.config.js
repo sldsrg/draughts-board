@@ -1,5 +1,5 @@
 import typescript from 'rollup-plugin-typescript2'
-import rebase from 'rollup-plugin-rebase'
+import url from 'rollup-plugin-url'
 import pkg from './package.json'
 
 export default {
@@ -10,19 +10,15 @@ export default {
       format: 'esm'
     }
   ],
-  external: [
-    ...Object.keys(pkg.dependencies || {}),
-    ...Object.keys(pkg.peerDependencies || {})
-  ],
+  external: [...Object.keys(pkg.dependencies || {}), ...Object.keys(pkg.peerDependencies || {})],
   plugins: [
-    rebase({
-      verbose: true,
-      keepName: true,
-      outputFolder: 'lib',
-      assetFolder: 'img'
+    url({
+      fileName: '[dirname][name].[hash][extname]',
+      destDir: 'lib',
+      exclude: 'node_modules/**'
     }),
     typescript({
-      typescript: require('typescript')
+      clean: true
     })
   ]
 }
