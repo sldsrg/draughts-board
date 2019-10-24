@@ -4,6 +4,7 @@
   },
   "extends": ["tslint:recommended"],
   "rules": {
+    "arrow-parens": false,
     "curly": [true, "ignore-same-line"],
     "class-name": true,
     "no-bitwise": false,
