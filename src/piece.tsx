@@ -1,6 +1,15 @@
 import React from 'react'
 import { createUseStyles } from 'react-jss'
 
+export class Piece {
+  constructor(
+    public isWhite: boolean,
+    public key: number,
+    public row: number,
+    public column: number
+  ) {}
+}
+
 const useStyles = createUseStyles({
   whitePiece: {
     stroke: '#000000',
@@ -15,29 +24,21 @@ const useStyles = createUseStyles({
 })
 
 interface IProps {
-  row: number
-  column: number
+  piece: Piece
 }
 
-export function WhiteMan(props: IProps) {
+export function Glyph(props: IProps) {
   const classes = useStyles()
-  const cx = props.column * 80 + 40
-  const cy = props.row * 80 + 40
-  return (
+  const cx = props.piece.column * 80 + 40
+  const cy = props.piece.row * 80 + 40
+  return props.piece.isWhite ? (
     <>
       <circle className={classes.whitePiece} fill='white' cx={cx} cy={cy} r={36} />
       <circle className={classes.whitePiece} fill='transparent' cx={cx} cy={cy} r={29} />
       <circle className={classes.whitePiece} fill='transparent' cx={cx} cy={cy} r={20} />
       <circle className={classes.whitePiece} fill='transparent' cx={cx} cy={cy} r={16} />
     </>
-  )
-}
-
-export function BlackMan(props: IProps) {
-  const classes = useStyles()
-  const cx = props.column * 80 + 40
-  const cy = props.row * 80 + 40
-  return (
+  ) : (
     <>
       <circle className={classes.blackPiece} fill='black' cx={cx} cy={cy} r={36} />
       <circle className={classes.blackPiece} fill='transparent' cx={cx} cy={cy} r={29} />

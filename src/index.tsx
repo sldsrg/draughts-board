@@ -1,6 +1,6 @@
 import React, { useState, useCallback } from 'react'
-import { WhiteMan, BlackMan } from './pieces'
-import { array } from 'prop-types'
+import { Position } from './position'
+import { Glyph } from './piece'
 
 const FIELD_SIZE = 80
 const BOARD_SIZE = FIELD_SIZE << 3
@@ -11,21 +11,44 @@ interface IProps {
 }
 
 export function Board(props: IProps) {
-  const [selected, setSelected] = useState()
+  const [selection, setSelection] = useState()
+  const [pieces, setPieces] = useState(new Position(Position.INITIAL).pieces)
 
-  const handleClick = useCallback((event: React.MouseEvent<SVGSVGElement, MouseEvent>) => {
-    const { left, top, width } = event.currentTarget.getBoundingClientRect()
-    const scale = (BOARD_SIZE + MARGIN + MARGIN) / (width - left)
-    const x = (event.clientX - left) * scale - MARGIN
-    const y = (event.clientY - top) * scale - MARGIN
-    if (0 > x || x > BOARD_SIZE || 0 > y || y > BOARD_SIZE) return
-    const column = Math.floor(x / FIELD_SIZE)
-    const row = Math.floor(y / FIELD_SIZE)
-    if (column % 2 !== row % 2) {
-      setSelected({ row, column })
-      console.log(`column:${column} row:${row}`)
-    }
-  }, [])
+  const handleClick = useCallback(
+    (event: React.MouseEvent<SVGSVGElement, MouseEvent>) => {
+      const { left, top, width } = event.currentTarget.getBoundingClientRect()
+      const scale = (BOARD_SIZE + MARGIN + MARGIN) / (width - left)
+      const x = (event.clientX - left) * scale - MARGIN
+      const y = (event.clientY - top) * scale - MARGIN
+      if (0 > x || x > BOARD_SIZE || 0 > y || y > BOARD_SIZE) return
+      const column: number = Math.floor(x / FIELD_SIZE)
+      const row: number = Math.floor(y / FIELD_SIZE)
+      if (column % 2 !== row % 2) {
+        if (selection) {
+          // TODO: prevent rules violation
+          const i = pieces.findIndex(
+            (piece) => piece.row === selection.row && piece.column === selection.column
+          )
+          if (i >= 0) {
+            const piece = pieces[i]
+            piece.row = row
+            piece.column = column
+            setPieces(pieces)
+          }
+          setSelection(null)
+        } else {
+          const i = pieces.findIndex((piece) => piece.row === row && piece.column === column)
+          if (i >= 0) {
+            // TODO: check turn move
+            const piece = pieces[i]
+            setPieces([...pieces.slice(0, i), ...pieces.slice(i + 1), piece]) // z-index workaround
+            setSelection({ row, column })
+          }
+        }
+      }
+    },
+    [selection, pieces]
+  )
 
   const whiteSquares = Array(16)
     .fill(null)
@@ -72,10 +95,10 @@ export function Board(props: IProps) {
           strokeWidth={MARGIN - 2}
         />
         {...whiteSquares}
-        {selected && (
+        {selection && (
           <rect
-            x={selected.column * FIELD_SIZE + 1}
-            y={selected.row * FIELD_SIZE + 1}
+            x={selection.column * FIELD_SIZE + 1}
+            y={selection.row * FIELD_SIZE + 1}
             width={FIELD_SIZE - 2}
             height={FIELD_SIZE - 2}
             fill='transparent'
@@ -83,10 +106,9 @@ export function Board(props: IProps) {
             strokeWidth={2}
           />
         )}
-        <BlackMan row={1} column={0} />
-        <BlackMan row={0} column={1} />
-        <WhiteMan row={7} column={0} />
-        <WhiteMan row={6} column={1} />
+        {pieces.map((piece) => (
+          <Glyph key={piece.key} piece={piece} />
+        ))}
       </svg>
     </div>
   )
