@@ -56,9 +56,18 @@ export function Board(props: IProps) {
         viewBox={`${-MARGIN} ${-MARGIN} ${BOARD_SIZE + MARGIN + MARGIN} ${BOARD_SIZE +
           MARGIN +
           MARGIN}`}
-        style={{ backgroundImage: `url(${props.background})` }}
+        style={
+          props.background ?
+            { backgroundImage: `url(${props.background})` }
+            : { backgroundColor: 'brown' }
+        }
         onClick={handleClick}
       >
+        <defs>
+          <filter id="blur">
+            <feGaussianBlur stdDeviation="3" />
+          </filter>
+        </defs>
         <rect
           x={-(MARGIN + 4) >> 1}
           y={-(MARGIN + 4) >> 1}
@@ -70,16 +79,15 @@ export function Board(props: IProps) {
         />
         {...whiteSquares}
         {state.selection && (
-          <rect
-            x={state.selection.column * FIELD_SIZE + 1}
-            y={state.selection.row * FIELD_SIZE + 1}
-            width={FIELD_SIZE - 2}
-            height={FIELD_SIZE - 2}
+          <circle
+            cx={state.selection.column * FIELD_SIZE + (FIELD_SIZE >> 1)}
+            cy={state.selection.row * FIELD_SIZE + (FIELD_SIZE >> 1)}
+            r={(FIELD_SIZE >> 1) - 2}
             fill='transparent'
             stroke='yellow'
-            strokeWidth={2}
-          />
-        )}
+            strokeWidth={10}
+            filter="url(#blur)"
+          />)}
         {state.position.pieces.map(piece => (
           <Glyph key={piece.key} piece={piece} />
         ))}
