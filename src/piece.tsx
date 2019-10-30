@@ -1,13 +1,18 @@
 import React from 'react'
 import { createUseStyles } from 'react-jss'
+import { Field } from './field'
 
 export class Piece {
+  public pos: Field
+
   constructor(
     public isWhite: boolean,
     public key: number,
-    public row: number,
-    public column: number
-  ) {}
+    pos: Field,
+    public isKing: boolean = false
+  ) {
+    this.pos = new Field(pos.row, pos.column)
+  }
 }
 
 const useStyles = createUseStyles({
@@ -31,30 +36,18 @@ interface IProps {
 
 export function Glyph(props: IProps) {
   const classes = useStyles()
-  const x = props.piece.column * 80 + 40
-  const y = props.piece.row * 80 + 40
+  const x = props.piece.pos.column * 80 + 40
+  const y = props.piece.pos.row * 80 + 40
   const pathData = `
     M ${x},${y}
     m -36,0 a 36,36 0 1,0 72,0 a 36,36 0 1,0 -72,0
     m 8,0 a 28,28 0 1,0 56,0 a 28,28 0 1,0 -56,0
     m 8,0 a 20,20 0 1,0 40,0 a 20,20 0 1,0 -40,0
   `
-  return props.piece.isWhite ? (
-    <path d={pathData} className={classes.whitePiece}></path>
-  ) : (
-    // <>
-    //   <circle className={classes.whitePiece} fill='white'  r={36} />
-    //   <circle className={classes.whitePiece} fill='transparent' cx={cx} cy={cy} r={29} />
-    //   <circle className={classes.whitePiece} fill='transparent' cx={cx} cy={cy} r={20} />
-    //   <circle className={classes.whitePiece} fill='transparent' cx={cx} cy={cy} r={16} />
-    // </>
-    <path d={pathData} className={classes.blackPiece}></path>
-
-    // <>
-    //   <circle className={classes.blackPiece} fill='black' cx={cx} cy={cy} r={36} />
-    //   <circle className={classes.blackPiece} fill='transparent' cx={cx} cy={cy} r={29} />
-    //   <circle className={classes.blackPiece} fill='transparent' cx={cx} cy={cy} r={20} />
-    //   <circle className={classes.blackPiece} fill='transparent' cx={cx} cy={cy} r={16} />
-    // </>
+  return (
+    <path
+      d={pathData}
+      className={props.piece.isWhite ? classes.whitePiece : classes.blackPiece}
+    ></path>
   )
 }

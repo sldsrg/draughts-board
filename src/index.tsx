@@ -1,5 +1,5 @@
-import React, { useState, useCallback } from 'react'
-import { Position } from './position'
+import React, { useCallback, useReducer } from 'react'
+import { reducer, INITIAL_STATE } from './reducer'
 import { Glyph } from './piece'
 
 const FIELD_SIZE = 80
@@ -11,44 +11,18 @@ interface IProps {
 }
 
 export function Board(props: IProps) {
-  const [selection, setSelection] = useState()
-  const [pieces, setPieces] = useState(new Position(Position.INITIAL).pieces)
+  const [state, dispatch] = useReducer(reducer, INITIAL_STATE)
 
-  const handleClick = useCallback(
-    (event: React.MouseEvent<SVGSVGElement, MouseEvent>) => {
-      const { left, top, width } = event.currentTarget.getBoundingClientRect()
-      const scale = (BOARD_SIZE + MARGIN + MARGIN) / (width - left)
-      const x = (event.clientX - left) * scale - MARGIN
-      const y = (event.clientY - top) * scale - MARGIN
-      if (0 > x || x > BOARD_SIZE || 0 > y || y > BOARD_SIZE) return
-      const column: number = Math.floor(x / FIELD_SIZE)
-      const row: number = Math.floor(y / FIELD_SIZE)
-      if (column % 2 !== row % 2) {
-        if (selection) {
-          // TODO: prevent rules violation
-          const i = pieces.findIndex(
-            (piece) => piece.row === selection.row && piece.column === selection.column
-          )
-          if (i >= 0) {
-            const piece = pieces[i]
-            piece.row = row
-            piece.column = column
-            setPieces(pieces)
-          }
-          setSelection(null)
-        } else {
-          const i = pieces.findIndex((piece) => piece.row === row && piece.column === column)
-          if (i >= 0) {
-            // TODO: check turn move
-            const piece = pieces[i]
-            setPieces([...pieces.slice(0, i), ...pieces.slice(i + 1), piece]) // z-index workaround
-            setSelection({ row, column })
-          }
-        }
-      }
-    },
-    [selection, pieces]
-  )
+  const handleClick = useCallback((event: React.MouseEvent<SVGSVGElement, MouseEvent>) => {
+    const { left, top, width } = event.currentTarget.getBoundingClientRect()
+    const scale = (BOARD_SIZE + MARGIN + MARGIN) / (width - left)
+    const x = (event.clientX - left) * scale - MARGIN
+    const y = (event.clientY - top) * scale - MARGIN
+    if (0 > x || x > BOARD_SIZE || 0 > y || y > BOARD_SIZE) return
+    const column: number = Math.floor(x / FIELD_SIZE)
+    const row: number = Math.floor(y / FIELD_SIZE)
+    dispatch({ type: 'click', payload: { row, column } })
+  }, [])
 
   const whiteSquares = Array(16)
     .fill(null)
@@ -95,10 +69,10 @@ export function Board(props: IProps) {
           strokeWidth={MARGIN - 2}
         />
         {...whiteSquares}
-        {selection && (
+        {state.selection && (
           <rect
-            x={selection.column * FIELD_SIZE + 1}
-            y={selection.row * FIELD_SIZE + 1}
+            x={state.selection.column * FIELD_SIZE + 1}
+            y={state.selection.row * FIELD_SIZE + 1}
             width={FIELD_SIZE - 2}
             height={FIELD_SIZE - 2}
             fill='transparent'
@@ -106,7 +80,7 @@ export function Board(props: IProps) {
             strokeWidth={2}
           />
         )}
-        {pieces.map((piece) => (
+        {state.position.pieces.map(piece => (
           <Glyph key={piece.key} piece={piece} />
         ))}
       </svg>
