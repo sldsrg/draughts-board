@@ -53,7 +53,7 @@ export class Position {
         console.log(`Invalid code at position ${i} (char ${ch}) row ${row}, col ${column}`)
         throw new Error('Invalid notation')
       } else {
-        const piece = new Piece(ch === 'M', key++, { row, column })
+        const piece = new Piece(ch === 'M', key++, new Field(row, column))
         position.pieces.push(piece)
         position.squares[row][column] = piece
         column += 2
@@ -107,47 +107,28 @@ export class Position {
     else return res + ' blacks turn'
   }
 
-  /// assumed that preliminary checks completed
-  public canCapture(actor: Piece, to: Field): Piece | null {
-    return null
-  }
-
-  public canMove(from: Field, to?: Field): boolean {
-    const piece = this.squares[from.row][from.column]
+  public isMoveLegal(from: Field, to: Field): boolean {
+    const piece = this.at(from)
     if (!piece) return false
-    if (piece.isWhite !== this.whitesTurn) return false
-    if (to && this.squares[to.row][to.column]) return false
-    // check on capture
-    if (to && Math.abs(from.row - to.row) === 2 && Math.abs(from.column - to.column) === 2) {
-      const row = (from.row + to.row) >> 1
-      const column = (from.column + to.column) >> 1
-      const captured = this.squares[row][column]
-      if (!captured) return false
-      if (captured.isWhite === piece.isWhite) return false
-      else return true
-    }
-    // check on quiet move
-    if (piece.isWhite) {
-      if (to) {
-        if (from.row - to.row !== 1) return false
-        if (Math.abs(from.column - to.column) !== 1) return false
-      }
-    } else {
-      if (to) {
-        if (to.row - from.row !== 1) return false
-        if (Math.abs(from.column - to.column) !== 1) return false
-      }
-    }
+    if (piece.isWhite !== this.whitesTurn) return false // not your turn
+    if (!piece.canMove(this, to)) return false
+
+    // TODO: checking for obligatory capture
+    const captureCapable = this.pieces.filter(p =>
+      p.isWhite === piece.isWhite
+      && p.key !== piece.key
+      && p.canCapture(this))
+    if (captureCapable.length > 0) return false
 
     return true
   }
 
   /// returns true if completed, otherwise continuation required
   public makeMove(from: Field, to: Field): boolean {
-    if (!this.canMove(from, to)) return false
+    if (!this.isMoveLegal(from, to)) return false
     const piece = this.at(from) as Piece
     this.squares[from.row][from.column] = undefined
-    piece.pos = { ...to }
+    piece.pos = to
     this.squares[to.row][to.column] = piece
 
     // check on captured pieces

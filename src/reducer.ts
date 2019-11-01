@@ -28,9 +28,9 @@ export function reducer(state: IState, action: IAction): IState {
       const { row, column } = action.payload as Field
       const piece = state.position.squares[row][column]
       if (piece && state.position.whitesTurn === piece.isWhite) {
-        return { ...state, selection: { row, column } }
+        return { ...state, selection: new Field(row, column) }
       }
-      if (state.selection && state.position.makeMove(state.selection, { row, column })) {
+      if (state.selection && state.position.makeMove(state.selection, new Field(row, column))) {
         return { ...state, selection: null }
       }
       return { ...state }

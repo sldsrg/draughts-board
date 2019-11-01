@@ -1,7 +1,7 @@
 import { Position } from './position'
 import {
   b8, c5, c7, d6, g1, e3, b6, f2, d4,
-  b2, g7, c3, f6, e5, g3, f4
+  b2, g7, c3, f6, e5, g3, f4, e1
 } from './utils/namedSquares'
 import { Piece } from './piece'
 
@@ -57,62 +57,60 @@ describe('class Position', () => {
     })
   })
 
-  describe('method *canMove*', () => {
-    it('returns false when starting field is empty', () => {
-      const pos = Position.fromStart()
-      expect(pos.canMove(d4)).toBe(false)
-    })
-
-    it('returns false when wrong piece color selected', () => {
-      let pos = Position.fromString('e1 g1, b8 d8 whites turn')
-      expect(pos.canMove(b6)).toBe(false)
-      pos = Position.fromString('e1 g1, b8 d8 blacks turn')
-      expect(pos.canMove(g1)).toBe(false)
-    })
-
+  describe('method *isMoveLegal*', () => {
     describe('for any move', () => {
       it('returns false when target field is not empty', () => {
         const pos = Position.fromString('d4, b6 c5')
-        expect(pos.canMove(d4, c5)).toBe(false)
+        expect(pos.isMoveLegal(d4, c5)).toBe(false)
       })
     })
 
     describe("for man's move without capture", () => {
       it('returns false by wrong direction', () => {
         const pos = Position.fromString('e3 g3, b6 d6') // whites turn
-        expect(pos.canMove(e3, f2)).toBe(false)
+        expect(pos.isMoveLegal(e3, f2)).toBe(false)
         pos.whitesTurn = false // blacks turn
-        expect(pos.canMove(b6, c7)).toBe(false)
+        expect(pos.isMoveLegal(b6, c7)).toBe(false)
       })
 
       it('returns false for long jump', () => {
         const pos = Position.fromString('e1 g1, b8 d8') // whites turn
-        expect(pos.canMove(g1, e3)).toBe(false)
+        expect(pos.isMoveLegal(g1, e3)).toBe(false)
         pos.whitesTurn = false // blacks turn
-        expect(pos.canMove(b8, d6)).toBe(false)
+        expect(pos.isMoveLegal(b8, d6)).toBe(false)
+      })
+
+      it('returns false when other piece can capture', () => {
+        const pos = Position.fromString('e1 g1, d2')
+        expect(pos.isMoveLegal(g1, f2)).toBe(false)
+      })
+
+      it('returns false when that piece can capture in other direction', () => {
+        const pos = Position.fromString('e1 g1, d2')
+        expect(pos.isMoveLegal(e1, f2)).toBe(false)
       })
     })
 
     describe("for man's move with single capture", () => {
       it('returns false when captured piece missed', () => {
         const pos = Position.fromString('e3 g3, b6 d6') // whites turn
-        expect(pos.canMove(g3, e5)).toBe(false)
+        expect(pos.isMoveLegal(g3, e5)).toBe(false)
         pos.whitesTurn = false // blacks turn
-        expect(pos.canMove(d6, f4)).toBe(false)
+        expect(pos.isMoveLegal(d6, f4)).toBe(false)
       })
 
       it('returns false when captured own piece', () => {
         const pos = Position.fromString('e3 d4, d6 e5') // whites turn
-        expect(pos.canMove(e3, c5)).toBe(false)
+        expect(pos.isMoveLegal(e3, c5)).toBe(false)
         pos.whitesTurn = false // blacks turn
-        expect(pos.canMove(d6, f4)).toBe(false)
+        expect(pos.isMoveLegal(d6, f4)).toBe(false)
       })
 
       it('returns true when captured opponent’s piece', () => {
         const pos = Position.fromString('e3 d4, d6 e5') // whites turn
-        expect(pos.canMove(d4, f6)).toBe(true)
+        expect(pos.isMoveLegal(d4, f6)).toBe(true)
         pos.whitesTurn = false // blacks turn
-        expect(pos.canMove(e5, c3)).toBe(true)
+        expect(pos.isMoveLegal(e5, c3)).toBe(true)
       })
     })
   })

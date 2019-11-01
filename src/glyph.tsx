@@ -1,19 +1,6 @@
 import React from 'react'
 import { createUseStyles } from 'react-jss'
-import { Field } from './field'
-
-export class Piece {
-  public pos: Field
-
-  constructor(
-    public isWhite: boolean,
-    public key: number,
-    pos: Field,
-    public isKing: boolean = false
-  ) {
-    this.pos = new Field(pos.row, pos.column)
-  }
-}
+import { Piece } from './piece'
 
 const useStyles = createUseStyles({
   whitePiece: {
