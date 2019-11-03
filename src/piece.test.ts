@@ -1,6 +1,6 @@
 import { Piece } from './piece'
 import { Position } from './position'
-import { c3, d4, c5, d6, e5, e3, g1, f4, a1, b2, c7, b6, a3, c1, e7 } from './utils/namedSquares'
+import { c3, d4, c5, d6, e5, e3, g1, f4, a1, b2, c7, b6, a3, c1, e7, g7 } from './utils/namedSquares'
 
 describe('consider piece is a man not a king', () => {
   describe('method *canCapture*', () => {
@@ -70,5 +70,25 @@ describe('consider piece is a man not a king', () => {
 })
 
 describe('consider piece is a king', () => {
-  xit('to be done', () => { })
+  describe('method *canCapture*', () => {
+    it('returns true for "long" capture', () => {
+      const context = Position.fromString('kings: b2, kings: g7 whites turn')
+      let piece = context.at(b2) as Piece
+      expect(piece.canCapture(context)).toBe(true)
+      context.whitesTurn = false
+      piece = context.at(g7) as Piece
+      expect(piece.canCapture(context)).toBe(true)
+    })
+
+    it('returns false when own piece in between', () => {
+      const context = Position.fromString('kings: b2 mans: d4, kings: g7 whites turn')
+      let piece = context.at(b2) as Piece
+      expect(piece.canCapture(context)).toBe(false)
+      context.whitesTurn = false
+      const obstacle = context.at(d4) as Piece
+      obstacle.isWhite = false
+      piece = context.at(g7) as Piece
+      expect(piece.canCapture(context)).toBe(false)
+    })
+  })
 })
