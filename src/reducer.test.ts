@@ -1,6 +1,7 @@
 import { reducer, IState } from './reducer'
 import { Position } from './position'
 import { c3, d4, c5, d6, e5, e3 } from './utils/namedSquares'
+import { Field } from './field'
 
 describe('reducer', () => {
   describe('action *init* ', () => {
@@ -62,13 +63,9 @@ describe('reducer', () => {
   })
 
   describe('action *click* with previous selection', () => {
-    let state: IState
-
-    beforeEach(() => {
-      state = { selection: c3, position: Position.fromStart() }
-    })
 
     it('make move when clicked field is legal move target', () => {
+      const state = { selection: c3, position: Position.fromStart() }
       // legal move c3-d4
       const res = reducer(state, { type: 'click', payload: d4 })
       expect(res.position.encode()).toEqual('mmmm/mmmm/mmmm/4/1M2/M1MM/MMMM/MMMM b')
@@ -76,10 +73,20 @@ describe('reducer', () => {
     })
 
     it('can not move when clicked field is illegal move target', () => {
+      const state = { selection: c3, position: Position.fromStart() }
       // illegal move c3-c5
       const res = reducer(state, { type: 'click', payload: c5 })
       expect(res.position.encode()).toEqual(Position.INITIAL)
-      expect(res.selection).toBe(state.selection)
+      expect(res.selection).toEqual(state.selection)
+    })
+
+    it('moves selection in case of capture continuation', () => {
+      const state = {
+        selection: c3,
+        position: Position.fromString('c3, d4 f6')
+      }
+      const res = reducer(state, { type: 'click', payload: e5 })
+      expect(res.selection).toEqual(e5)
     })
   })
 })

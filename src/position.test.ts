@@ -112,6 +112,16 @@ describe('class Position', () => {
         pos.whitesTurn = false // blacks turn
         expect(pos.isMoveLegal(e5, c3)).toBe(true)
       })
+
+      it('returns true even if other piece can capture', () => {
+        const pos = Position.fromString('e1 g1, d2 f2')
+        expect(pos.isMoveLegal(g1, e3)).toBe(true)
+      })
+
+      it('returns true even if that piece can capture in other direction', () => {
+        const pos = Position.fromString('e1 g1, d2 f2')
+        expect(pos.isMoveLegal(e1, g3)).toBe(true)
+      })
     })
   })
 
@@ -135,6 +145,12 @@ describe('class Position', () => {
       expect(pos.at(c3)).toBeUndefined()
       expect(pos.at(d4)).toBeUndefined()
       expect(pos.at(e5)).toEqual(subject)
+    })
+
+    it('returns false after capture if next capture available', () => {
+      const pos = Position.fromString('c3, d4 f6')
+      const completed = pos.makeMove(c3, e5)
+      expect(completed).toBe(false)
     })
   })
 })

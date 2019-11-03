@@ -1,6 +1,7 @@
 import React, { useCallback, useReducer } from 'react'
 import { reducer, INITIAL_STATE } from './reducer'
-import { Glyph } from './piece'
+import { Glyph } from './glyph'
+import { Field } from './field'
 
 const FIELD_SIZE = 80
 const BOARD_SIZE = FIELD_SIZE << 3
@@ -21,7 +22,7 @@ export function Board(props: IProps) {
     if (0 > x || x > BOARD_SIZE || 0 > y || y > BOARD_SIZE) return
     const column: number = Math.floor(x / FIELD_SIZE)
     const row: number = Math.floor(y / FIELD_SIZE)
-    dispatch({ type: 'click', payload: { row, column } })
+    dispatch({ type: 'click', payload: new Field(row, column) })
   }, [])
 
   const whiteSquares = Array(16)
@@ -56,11 +57,10 @@ export function Board(props: IProps) {
         viewBox={`${-MARGIN} ${-MARGIN} ${BOARD_SIZE + MARGIN + MARGIN} ${BOARD_SIZE +
           MARGIN +
           MARGIN}`}
-        style={
-          props.background ?
-            { backgroundImage: `url(${props.background})` }
-            : { backgroundColor: 'brown' }
-        }
+        style={{
+          backgroundColor: 'brown',
+          backgroundImage: `url(${props.background})`
+        }}
         onClick={handleClick}
       >
         <defs>

@@ -1,5 +1,6 @@
 import { Piece } from './piece'
 import { Field } from './field'
+import { Vector } from './vector'
 
 export class Position {
   public static INITIAL = 'mmmm/mmmm/mmmm/4/4/MMMM/MMMM/MMMM w'
@@ -113,13 +114,15 @@ export class Position {
     if (piece.isWhite !== this.whitesTurn) return false // not your turn
     if (!piece.canMove(this, to)) return false
 
-    // TODO: checking for obligatory capture
-    const captureCapable = this.pieces.filter(p =>
-      p.isWhite === piece.isWhite
-      && p.key !== piece.key
-      && p.canCapture(this))
-    if (captureCapable.length > 0) return false
-
+    if (this.isCapture(from, to)) {
+      return true
+    } else {
+      // checking for obligatory capture
+      const captureCapable = this.pieces.filter(p =>
+        p.isWhite === piece.isWhite
+        && p.canCapture(this))
+      if (captureCapable.length > 0) return false
+    }
     return true
   }
 
@@ -132,15 +135,16 @@ export class Position {
     this.squares[to.row][to.column] = piece
 
     // check on captured pieces
-    const step = { row: to.row > from.row ? 1 : -1, column: to.column > from.column ? 1 : -1 }
-    const next = new Field(from.row + step.row, from.column + step.column)
+    const step = Vector.unit(from, to)
+    const next = from.shift(step)
     if (next.row !== to.row) {
       const captured = this.at(next) as Piece
       this.pieces = this.pieces.filter(p => p.key !== captured.key)
       this.squares[next.row][next.column] = undefined
+      // check on capture continuation
+      if (piece.canCapture(this)) return false
     }
 
-    // check on capture continuation
     this.whitesTurn = !this.whitesTurn
     return true
   }
@@ -170,5 +174,14 @@ export class Position {
 
     res.push(this.whitesTurn ? ' w' : ' b')
     return res.join('')
+  }
+
+  private isCapture(from: Field, to: Field): boolean {
+    const step = Vector.unit(from, to)
+    for (let s = from.shift(step); s.row !== to.row; s = s.shift(step)) {
+      const piece = this.at(s)
+      if (piece && piece.isWhite !== this.whitesTurn) return true
+    }
+    return false
   }
 }

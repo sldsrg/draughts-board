@@ -25,13 +25,14 @@ export function reducer(state: IState, action: IAction): IState {
         return { selection: null, position: Position.fromStart() }
       }
     case 'click':
-      const { row, column } = action.payload as Field
-      const piece = state.position.squares[row][column]
+      const field = action.payload as Field
+      const piece = state.position.at(field)
       if (piece && state.position.whitesTurn === piece.isWhite) {
-        return { ...state, selection: new Field(row, column) }
+        return { ...state, selection: field }
       }
-      if (state.selection && state.position.makeMove(state.selection, new Field(row, column))) {
-        return { ...state, selection: null }
+      if (state.selection && state.position.isMoveLegal(state.selection, field)) {
+        const completed = state.position.makeMove(state.selection, field)
+        return { ...state, selection: completed ? null : field }
       }
       return { ...state }
     default:
