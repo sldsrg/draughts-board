@@ -1,7 +1,7 @@
 import { Position } from './position'
 import {
   b8, c5, c7, d6, g1, e3, b6, f2, d4,
-  b2, g7, c3, f6, e5, g3, f4, e1
+  b2, g7, c3, f6, e5, g3, f4, e1, d8, d2
 } from './utils/namedSquares'
 import { Piece } from './piece'
 
@@ -151,6 +151,20 @@ describe('class Position', () => {
       const pos = Position.fromString('c3, d4 f6')
       const completed = pos.makeMove(c3, e5)
       expect(completed).toBe(false)
+    })
+
+    it('promote white man to king on the topmost row', () => {
+      const pos = Position.fromString('c7, d2 ')
+      pos.makeMove(c7, d8)
+      const piece = pos.at(d8) as Piece
+      expect(piece.isKing).toBe(true)
+    })
+
+    it('promote black man to king on the lowest row', () => {
+      const pos = Position.fromString('c7, d2 blacks turn')
+      const completed = pos.makeMove(d2, e1)
+      const piece = pos.at(e1) as Piece
+      expect(piece.isKing).toBe(true)
     })
   })
 })

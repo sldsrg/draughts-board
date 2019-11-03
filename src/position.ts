@@ -133,6 +133,9 @@ export class Position {
     this.squares[from.row][from.column] = undefined
     piece.pos = to
     this.squares[to.row][to.column] = piece
+    if (piece.isWhite && to.row === 0 || !piece.isWhite && to.row === 7) {
+      piece.isKing = true
+    }
 
     // check on captured pieces
     const step = Vector.unit(from, to)
