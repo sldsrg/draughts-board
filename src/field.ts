@@ -13,11 +13,14 @@ export class Field {
     return new Field(this.row + rowStep, this.column + columnStep)
   }
 
-  public shift({ deltaRow, deltaColumn }: Vector): Field {
-    return new Field(
-      this.row + deltaRow,
-      this.column + deltaColumn
-    )
+  public shift({ deltaRow, deltaColumn }: Vector): Field | null {
+    const nextRow = this.row + deltaRow
+    if (deltaRow > 0 && nextRow > 7) return null
+    if (deltaRow < 0 && nextRow < 0) return null
+    const nextColumn = this.column + deltaColumn
+    if (deltaColumn > 0 && nextColumn > 7) return null
+    if (deltaColumn < 0 && nextColumn < 0) return null
+    return new Field(nextRow, nextColumn)
   }
 
   public nextTo(target: Field): Field {

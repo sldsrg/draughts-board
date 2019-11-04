@@ -2,6 +2,11 @@ import { Field } from './field'
 
 // simplified vector model (diagonal only)
 export class Vector {
+  public static NW = new Vector(-1, -1)
+  public static NE = new Vector(-1, 1)
+  public static SE = new Vector(1, 1)
+  public static SW = new Vector(1, -1)
+
   public static unit(from: Field, to: Field): Vector {
     return new Vector(
       (to.row > from.row) ? 1 : -1,

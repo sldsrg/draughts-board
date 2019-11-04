@@ -21,15 +21,24 @@ describe('class Position', () => {
     it('parse position without kings', () => {
       const pos = Position.fromString('Whites: b2 c3, Blacks: f6 g7')
       expect(pos.pieces).toHaveLength(4)
-      expect(pos.squares[6][1]).toEqual(new Piece(true, 0, b2))
-      expect(pos.squares[5][2]).toEqual(new Piece(true, 1, c3))
-      expect(pos.squares[2][5]).toEqual(new Piece(false, 2, f6))
-      expect(pos.squares[1][6]).toEqual(new Piece(false, 3, g7))
+      expect(pos.squares[6][1]).toMatchObject({ isWhite: true, isKing: false })
+      expect(pos.squares[5][2]).toMatchObject({ isWhite: true, isKing: false })
+      expect(pos.squares[2][5]).toMatchObject({ isWhite: false, isKing: false })
+      expect(pos.squares[1][6]).toMatchObject({ isWhite: false, isKing: false })
     })
 
     it('detects blacks turn', () => {
       const pos = Position.fromString('Whites: b2 c3, Blacks: f6 g7 blacks turn')
       expect(pos.whitesTurn).toBe(false)
+    })
+
+    it('parse position with kings', () => {
+      const pos = Position.fromString('Whites: king b2 man c3, blacks: kings f6 g7')
+      expect(pos.pieces).toHaveLength(4)
+      expect(pos.squares[6][1]).toMatchObject({ isWhite: true, isKing: true })
+      expect(pos.squares[5][2]).toMatchObject({ isWhite: true, isKing: false })
+      expect(pos.squares[2][5]).toMatchObject({ isWhite: false, isKing: true })
+      expect(pos.squares[1][6]).toMatchObject({ isWhite: false, isKing: true })
     })
   })
 

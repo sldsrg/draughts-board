@@ -15,13 +15,28 @@ export class Piece {
   }
 
   /**
-   * canCaptureAt
+   * canCaptureOn
+   *
+   * return true if this piece can capture
+   * on given direction (regardless of turn)
    */
-  public canCaptureAt(context: Position, target: Field): boolean {
-    const victim = context.at(target)
-    if (!victim || (victim as Piece).isWhite === this.isWhite) return false
-    if (context.at(this.pos.nextTo(target))) return false
-    return true
+  public canCaptureOn(context: Position, vector: Vector): boolean {
+    const step = vector.step
+    let next = this.pos.shift(step)
+    if (!next) return false
+    let captured = context.at(next)
+    next = next.shift(step)
+    while (next) {
+      if (captured) {
+        if (this.isWhite === captured.isWhite) return false
+        if (context.at(next)) return false
+        return true
+      }
+      if (!this.isKing) return false
+      captured = context.at(next)
+      next = next.shift(step)
+    }
+    return false
   }
 
   /**
@@ -31,27 +46,10 @@ export class Piece {
    * regardless of turn
    */
   public canCapture(context: Position): boolean {
-
-    if (this.pos.row > 1
-      && this.pos.column < 6
-      && this.canCaptureAt(context, this.pos.next(-1, 1))
-    ) return true
-
-    if (this.pos.row > 1
-      && this.pos.column > 1
-      && this.canCaptureAt(context, this.pos.next(-1, -1))
-    ) return true
-
-    if (this.pos.row < 6
-      && this.pos.column < 6
-      && this.canCaptureAt(context, this.pos.next(1, 1))
-    ) return true
-
-    if (this.pos.row < 6
-      && this.pos.column > 1
-      && this.canCaptureAt(context, this.pos.next(1, -1))
-    ) return true
-
+    if (this.canCaptureOn(context, new Vector(-1, 1))) return true
+    if (this.canCaptureOn(context, new Vector(-1, -1))) return true
+    if (this.canCaptureOn(context, new Vector(1, 1))) return true
+    if (this.canCaptureOn(context, new Vector(1, -1))) return true
     return false
   }
 
@@ -71,7 +69,7 @@ export class Piece {
         return this.isWhite === vector.deltaRow < 0
       } else {
         // TODO: separate logic for king
-        if (this.canCaptureAt(context, this.pos.shift(vector.step))) return true
+        if (this.canCaptureOn(context, vector)) return true
         return false
       }
     } else {

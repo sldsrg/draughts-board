@@ -11,28 +11,35 @@ export class Position {
 
   public static fromString(s: string): Position {
     /// examples:
-    /// whites = 'b3 c3', blacks='king g1 mans h6 g5'
-    /// whites = 'дамки е1 h2 простая g3', blacks = 'дамка g1 простые f2 h4'
-    const gre = /((whites:)?\s*((\s*[a-h][1-8])+)),\s*((blacks:)?\s*((\s*[a-h][1-8])+))\s*(b)?/gi
+    /// whites: b3 c3, blacks: king g1 mans h6 g5'
+    /// белые: дамки е1 h2 простая g3, черные: дамка g1 простые f2 h4'
+
+    const gre = new RegExp([
+      /((whites:)?\s*(kings?\s*(?<wk>(\s*[a-h][1-8])+))?\s*((mans?)?\s*(?<wm>(\s*[a-h][1-8])+))?)/,
+      /,\s*/,
+      /((blacks:)?\s*(kings?\s*(?<bk>(\s*[a-h][1-8])+))?\s*((mans?)?\s*(?<bm>(\s*[a-h][1-8])+))?)/,
+      /\s*(?<turn>b)?/
+    ].map(r => r.source).join(''), 'gi')
+
     const res = gre.exec(s)
-    if (res === null) throw new Error(`Incorrect position description: ${s}`)
-    const whites = res[3]
-    const blacks = res[7]
+    if (res === null || !res.groups) throw new Error(`Incorrect position description: ${s}`)
     const position = new Position()
     let key = 0
-    whites.split(' ').forEach(sq => {
-      const pos = Field.fromString(sq)
-      const piece = new Piece(true, key++, pos)
-      position.pieces.push(piece)
-      position.squares[pos.row][pos.column] = piece
+    Object.entries(res.groups).forEach(([name, group]) => {
+      if (!group) return
+      if (name === 'turn') {
+        position.whitesTurn = !group
+      } else {
+        const isWhite = name === 'wk' || name === 'wm'
+        const isKing = name === 'wk' || name === 'bk'
+        group.trim().split(' ').forEach(sq => {
+          const pos = Field.fromString(sq)
+          const piece = new Piece(isWhite, key++, pos, isKing)
+          position.pieces.push(piece)
+          position.squares[pos.row][pos.column] = piece
+        })
+      }
     })
-    blacks.split(' ').forEach(sq => {
-      const pos = Field.fromString(sq)
-      const piece = new Piece(false, key++, pos)
-      position.pieces.push(piece)
-      position.squares[pos.row][pos.column] = piece
-    })
-    position.whitesTurn = res[9] === undefined
     return position
   }
 
@@ -114,7 +121,7 @@ export class Position {
     if (piece.isWhite !== this.whitesTurn) return false // not your turn
     if (!piece.canMove(this, to)) return false
 
-    if (this.isCapture(from, to)) {
+    if (this.findCapture(from, to) !== null) {
       return true
     } else {
       // checking for obligatory capture
@@ -129,6 +136,14 @@ export class Position {
   /// returns true if completed, otherwise continuation required
   public makeMove(from: Field, to: Field): boolean {
     if (!this.isMoveLegal(from, to)) return false
+
+    // check on captured pieces
+    const captured = this.findCapture(from, to)
+    if (captured) {
+      this.squares[captured.pos.row][captured.pos.column] = undefined
+      this.pieces = this.pieces.filter(p => p.key !== captured.key)
+    }
+
     const piece = this.at(from) as Piece
     this.squares[from.row][from.column] = undefined
     piece.pos = to
@@ -137,16 +152,8 @@ export class Position {
       piece.isKing = true
     }
 
-    // check on captured pieces
-    const step = Vector.unit(from, to)
-    const next = from.shift(step)
-    if (next.row !== to.row) {
-      const captured = this.at(next) as Piece
-      this.pieces = this.pieces.filter(p => p.key !== captured.key)
-      this.squares[next.row][next.column] = undefined
-      // check on capture continuation
-      if (piece.canCapture(this)) return false
-    }
+    // check on capture continuation
+    if (captured && piece.canCapture(this)) return false
 
     this.whitesTurn = !this.whitesTurn
     return true
@@ -179,12 +186,24 @@ export class Position {
     return res.join('')
   }
 
-  private isCapture(from: Field, to: Field): boolean {
-    const step = Vector.unit(from, to)
-    for (let s = from.shift(step); s.row !== to.row; s = s.shift(step)) {
-      const piece = this.at(s)
-      if (piece && piece.isWhite !== this.whitesTurn) return true
+  private findCapture(from: Field, to: Field): Piece | null {
+    const vector = Vector.get(from, to)
+    if (vector.isUnit) return null
+    const step = vector.step
+    let next = from.shift(step)
+    if (!next) return null
+    let captured = this.at(next)
+    next = next.shift(step)
+    while (next) {
+      if (captured) {
+        if (captured.isWhite === this.whitesTurn) return null
+        if (this.at(next)) return null
+        return captured
+      }
+      if (next.row === to.row) return null
+      captured = this.at(next)
+      next = next.shift(step)
     }
-    return false
+    return null
   }
 }
