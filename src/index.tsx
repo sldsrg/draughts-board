@@ -1,9 +1,9 @@
-import React, { useReducer, useEffect, useRef, useState } from 'react'
-import { BOARD_SIZE, FIELD_SIZE, MARGIN } from './constants'
-import { reducer, INITIAL_STATE, IState } from './reducer'
-import { Definitions, Glyph } from './glyph'
-import { parseMove, shouldCapture } from './tools'
-import { Field } from './field'
+import React, {useReducer, useEffect, useRef, useState} from 'react'
+import {BOARD_SIZE, FIELD_SIZE, MARGIN} from './constants'
+import {getReducer, INITIAL_STATE, IState} from './reducer'
+import {Definitions, Glyph} from './glyph'
+import {parseMove, shouldCapture} from './tools'
+import {Field} from './field'
 
 type MoveCallback = (notation: string) => void
 
@@ -15,18 +15,18 @@ interface IProps {
 }
 
 export function Board(props: IProps) {
-  const { background, position, moves, onMoveCompleted } = props
-  const [state, dispatch] = useReducer(reducer, INITIAL_STATE)
+  const {background, position, moves, onMoveCompleted} = props
+  const [state, dispatch] = useReducer(getReducer(onMoveCompleted), INITIAL_STATE)
   const [movesToPlay, setMovesToPlay] = useState<string[]>([])
   const stateLog = useRef<IState[]>([])
 
   useEffect(() => {
-    dispatch({ type: 'init', position })
+    dispatch({type: 'init', position})
   }, [position])
 
   useEffect(() => {
     if (moves === undefined) {
-      dispatch({ type: 'init', position })
+      dispatch({type: 'init', position})
       stateLog.current = []
       return
     }
@@ -45,7 +45,7 @@ export function Board(props: IProps) {
     const actions = parseMove(state, to)
     if (actions) {
       actions.map(x => dispatch(x))
-      dispatch({ type: 'advance' })
+      dispatch({type: 'advance'})
     }
     setMovesToPlay(rest)
   }, [movesToPlay, state])
@@ -60,42 +60,30 @@ export function Board(props: IProps) {
   }
 
   const squareClicked = (target: number) => {
-    const pieceIndex = state.board[target]
-    if (state.selection !== undefined) {
+    const {board, pieces, selection, whitesTurn} = state
+    const pieceIndex = board[target]
+    if (selection !== undefined) {
       if (pieceIndex !== null) { // keep or move selection
-        const code = state.pieces[pieceIndex]
-        const isWhite = 'MK'.includes(code)
-        if (state.whitesTurn === isWhite) {
-          dispatch({ type: 'select', at: target })
+        if (whitesTurn === 'MK'.includes(pieces[pieceIndex])) {
+          dispatch({type: 'select', at: target})
         }
       } else {
         const actions = parseMove(state, target)
         if (actions !== null) { // make move
-          let capture = false
-          actions.forEach(action => {
-            if (action.type === 'remove') capture = true
-            dispatch(action)
-          })
-
+          actions.forEach(action => dispatch(action))
           if ( // check on man-to-king promotion
-            state.whitesTurn && target < 8 ||
-            !state.whitesTurn && target > 54
+            'Mm'.includes(pieces[board[selection] as number]) &&
+            (whitesTurn && target < 8 || !whitesTurn && target > 54)
           ) {
-            dispatch({ type: 'convert', at: target })
+            dispatch({type: 'convert', at: target})
           }
-
-          if (!capture || !shouldCapture(state.board, state.pieces, target)) {
-            dispatch({ type: 'advance' })
-            if (onMoveCompleted) onMoveCompleted('')
-          }
+          dispatch({type: 'advance'})
         }
       }
     } else { // select piece
       if (pieceIndex !== null) {
-        const code = state.pieces[pieceIndex]
-        const isWhite = 'MK'.includes(code)
-        if (state.whitesTurn === isWhite) {
-          dispatch({ type: 'select', at: target })
+        if (whitesTurn === 'MK'.includes(pieces[pieceIndex])) {
+          dispatch({type: 'select', at: target})
         }
       }
     }
@@ -140,14 +128,14 @@ export function Board(props: IProps) {
       <h1>Draughts Board</h1>
       <svg
         viewBox={`${-MARGIN} ${-MARGIN} ${BOARD_SIZE + MARGIN + MARGIN} ${BOARD_SIZE +
-          MARGIN +
-          MARGIN}`}
+        MARGIN +
+        MARGIN}`}
         style={{
           backgroundColor: 'brown',
           backgroundImage: `url(${background})`
         }}
       >
-        <Definitions />
+        <Definitions/>
         <rect
           x={-(MARGIN + 4) >> 1}
           y={-(MARGIN + 4) >> 1}

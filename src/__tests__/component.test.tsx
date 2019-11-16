@@ -119,6 +119,15 @@ describe('Board component', () => {
       expect(selector).toHaveAttribute('cy', y.toString())
     })
 
+    it('clears selection if capture continuation finished', () => {
+      const rr = render(<Board position='c1 h6, d2 f4 g7 h4' />)
+      fireEvent.click(rr.getByRole('c1')) // select piece
+      fireEvent.click(rr.getByRole('e3')) // first capture
+      expect(rr.queryByRole('highlight')).toBeDefined()
+      fireEvent.click(rr.getByRole('g5')) // last capture
+      expect(rr.queryByRole('highlight')).toBeNull()
+    })
+
     it('promote white man to king on the topmost row', () => {
       const rr = render(<Board position='c7, d2' />)
       fireEvent.click(rr.getByRole('c7')) // select piece

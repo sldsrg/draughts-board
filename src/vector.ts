@@ -44,9 +44,9 @@ export class Vector {
     const row = square >> 3
     const column = square - (row << 3)
     const nextRow = row + this.deltaRow
-    if (row < 0 || row > 7) return null
+    if (nextRow < 0 || nextRow > 7) return null
     const nextColumn = column + this.deltaColumn
-    if (column < 0 || column > 7) return null
+    if (nextColumn < 0 || nextColumn > 7) return null
     return (nextRow << 3) + nextColumn
   }
 }
