@@ -1,53 +1,138 @@
-import React, { useCallback, useReducer } from 'react'
-import { reducer, INITIAL_STATE } from './reducer'
-import { Glyph } from './glyph'
+import React, { useReducer, useEffect, useRef, useState } from 'react'
+import { BOARD_SIZE, FIELD_SIZE, MARGIN } from './constants'
+import { reducer, INITIAL_STATE, IState } from './reducer'
+import { Definitions, Glyph } from './glyph'
+import { parseMove, shouldCapture } from './tools'
 import { Field } from './field'
 
-const FIELD_SIZE = 80
-const BOARD_SIZE = FIELD_SIZE << 3
-const MARGIN = 24
+type MoveCallback = (notation: string) => void
 
 interface IProps {
-  background?: string
+  background?: string,
+  position?: string,
+  moves?: string[],
+  onMoveCompleted?: MoveCallback
 }
 
 export function Board(props: IProps) {
+  const { background, position, moves, onMoveCompleted } = props
   const [state, dispatch] = useReducer(reducer, INITIAL_STATE)
+  const [movesToPlay, setMovesToPlay] = useState<string[]>([])
+  const stateLog = useRef<IState[]>([])
 
-  const handleClick = useCallback((event: React.MouseEvent<SVGSVGElement, MouseEvent>) => {
-    const { left, top, width } = event.currentTarget.getBoundingClientRect()
-    const scale = (BOARD_SIZE + MARGIN + MARGIN) / (width - left)
-    const x = (event.clientX - left) * scale - MARGIN
-    const y = (event.clientY - top) * scale - MARGIN
-    if (0 > x || x > BOARD_SIZE || 0 > y || y > BOARD_SIZE) return
-    const column: number = Math.floor(x / FIELD_SIZE)
-    const row: number = Math.floor(y / FIELD_SIZE)
-    dispatch({ type: 'click', payload: new Field(row, column) })
-  }, [])
+  useEffect(() => {
+    dispatch({ type: 'init', position })
+  }, [position])
 
-  const whiteSquares = Array(16)
+  useEffect(() => {
+    if (moves === undefined) {
+      dispatch({ type: 'init', position })
+      stateLog.current = []
+      return
+    }
+    setMovesToPlay(moves
+      .filter((move, i) => stateLog.current.some(s => (i + 1) >= (s.belongsToMoveNumber || 1)))
+    )
+
+  }, [moves])
+
+  useEffect(() => {
+    if (movesToPlay.length === 0) return
+    const [move, ...rest] = movesToPlay
+    const from = Field.parse(move.substr(0, 2))
+    const to = Field.parse(move.substr(3, 2))
+    state.selection = from
+    const actions = parseMove(state, to)
+    if (actions) {
+      actions.map(x => dispatch(x))
+      dispatch({ type: 'advance' })
+    }
+    setMovesToPlay(rest)
+  }, [movesToPlay, state])
+
+  useEffect(() => {
+    if (state.belongsToMoveNumber) stateLog.current.push(state)
+  }, [state])
+
+  const pieceClicked = (piece: number) => {
+    const square = state.board.findIndex(s => s === piece)
+    squareClicked(square)
+  }
+
+  const squareClicked = (target: number) => {
+    const pieceIndex = state.board[target]
+    if (state.selection !== undefined) {
+      if (pieceIndex !== null) { // keep or move selection
+        const code = state.pieces[pieceIndex]
+        const isWhite = 'MK'.includes(code)
+        if (state.whitesTurn === isWhite) {
+          dispatch({ type: 'select', at: target })
+        }
+      } else {
+        const actions = parseMove(state, target)
+        if (actions !== null) { // make move
+          let capture = false
+          actions.forEach(action => {
+            if (action.type === 'remove') capture = true
+            dispatch(action)
+          })
+
+          if ( // check on man-to-king promotion
+            state.whitesTurn && target < 8 ||
+            !state.whitesTurn && target > 54
+          ) {
+            dispatch({ type: 'convert', at: target })
+          }
+
+          if (!capture || !shouldCapture(state.board, state.pieces, target)) {
+            dispatch({ type: 'advance' })
+            if (onMoveCompleted) onMoveCompleted('')
+          }
+        }
+      }
+    } else { // select piece
+      if (pieceIndex !== null) {
+        const code = state.pieces[pieceIndex]
+        const isWhite = 'MK'.includes(code)
+        if (state.whitesTurn === isWhite) {
+          dispatch({ type: 'select', at: target })
+        }
+      }
+    }
+  }
+
+  const squares = Array(64)
     .fill(null)
-    .flatMap((_, i) => {
-      const row = (i >> 2) << 1
-      const column = i % 4 << 1
-      return [
+    .map((_, i) => {
+      const row = i >> 3
+      const column = i % 8
+      const role = 'abcdefgh'.charAt(column) + (8 - row).toString()
+      return (
         <rect
-          key={i}
+          key={i} role={role}
           x={column * FIELD_SIZE}
           y={row * FIELD_SIZE}
           width={FIELD_SIZE}
           height={FIELD_SIZE}
-          fill='#ffffff77'
-        />,
-        <rect
-          key={i + 16}
-          x={(column + 1) * FIELD_SIZE}
-          y={(row + 1) * FIELD_SIZE}
-          width={FIELD_SIZE}
-          height={FIELD_SIZE}
-          fill='#ffffff77'
+          fill={row % 2 === column % 2 ? '#ffffff77' : '#00000000'}
+          onClick={() => squareClicked(i)}
+        />)
+    })
+
+  const glyphs = state.pieces
+    .map((code, i) => {
+      if (code === '') return
+      const square = state.board.indexOf(i)
+      return (
+        <Glyph
+          key={`piece${i}`}
+          id={i}
+          code={code}
+          square={square}
+          selected={state.selection === square}
+          onClick={() => pieceClicked(i)}
         />
-      ]
+      )
     })
 
   return (
@@ -59,15 +144,10 @@ export function Board(props: IProps) {
           MARGIN}`}
         style={{
           backgroundColor: 'brown',
-          backgroundImage: `url(${props.background})`
+          backgroundImage: `url(${background})`
         }}
-        onClick={handleClick}
       >
-        <defs>
-          <filter id="blur">
-            <feGaussianBlur stdDeviation="3" />
-          </filter>
-        </defs>
+        <Definitions />
         <rect
           x={-(MARGIN + 4) >> 1}
           y={-(MARGIN + 4) >> 1}
@@ -77,20 +157,8 @@ export function Board(props: IProps) {
           stroke='#ffffff77'
           strokeWidth={MARGIN - 2}
         />
-        {...whiteSquares}
-        {state.selection && (
-          <circle
-            cx={state.selection.column * FIELD_SIZE + (FIELD_SIZE >> 1)}
-            cy={state.selection.row * FIELD_SIZE + (FIELD_SIZE >> 1)}
-            r={(FIELD_SIZE >> 1) - 2}
-            fill='transparent'
-            stroke='yellow'
-            strokeWidth={10}
-            filter="url(#blur)"
-          />)}
-        {state.position.pieces.map(piece => (
-          <Glyph key={piece.key} piece={piece} />
-        ))}
+        {...squares}
+        {...glyphs}
       </svg>
     </div>
   )
