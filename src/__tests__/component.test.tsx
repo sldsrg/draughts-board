@@ -1,13 +1,13 @@
 import '@testing-library/jest-dom/extend-expect'
 import React from 'react'
-import { render, fireEvent, cleanup, RenderResult } from '@testing-library/react'
+import {render, fireEvent, cleanup, RenderResult} from '@testing-library/react'
 
-import { Board } from '../index'
-import { centerOf, c3, e3, d4, e5 } from './utils/namedSquares'
+import {Board} from '../index'
+import {centerOf, c3, e3, d4, e5} from './utils/namedSquares'
 
 afterEach(cleanup)
-
 describe('Board component', () => {
+
   describe('wen rendered with undefined position property', () => {
     it('setup initial position', () => {
       const rr = render(<Board />)
@@ -45,19 +45,19 @@ describe('Board component', () => {
       fireEvent.click(rr.getByRole('c3'))
       const selector = rr.queryByRole('highlight')
       expect(selector).not.toBeNull()
-      const { x, y } = centerOf(c3)
+      const {x, y} = centerOf(c3)
       expect(selector).toHaveAttribute('cx', x.toString())
       expect(selector).toHaveAttribute('cy', y.toString())
     })
   })
-
   describe('with selected piece', () => {
+
     it('change selection when clicked on another piece that can move', () => {
       const rr = render(<Board />)
       fireEvent.click(rr.getByRole('c3')) // select piece
       fireEvent.click(rr.getByRole('e3')) // select another
       const selector = rr.queryByRole('highlight')
-      const { x, y } = centerOf(e3)
+      const {x, y} = centerOf(e3)
       expect(selector).toHaveAttribute('cx', x.toString())
       expect(selector).toHaveAttribute('cy', y.toString())
     })
@@ -67,7 +67,7 @@ describe('Board component', () => {
       fireEvent.click(rr.getByRole('c3')) // select piece
       fireEvent.click(rr.getByRole('b6')) // ignore
       const selector = rr.queryByRole('highlight')
-      const { x, y } = centerOf(c3)
+      const {x, y} = centerOf(c3)
       expect(selector).toHaveAttribute('cx', x.toString())
       expect(selector).toHaveAttribute('cy', y.toString())
     })
@@ -77,7 +77,7 @@ describe('Board component', () => {
       fireEvent.click(rr.getByRole('c3')) // select piece
       fireEvent.click(rr.getByRole('c5')) // ignore
       const selector = rr.queryByRole('highlight')
-      const { x, y } = centerOf(c3)
+      const {x, y} = centerOf(c3)
       expect(selector).toHaveAttribute('cx', x.toString())
       expect(selector).toHaveAttribute('cy', y.toString())
     })
@@ -88,17 +88,36 @@ describe('Board component', () => {
       fireEvent.click(rr.getByRole('d4')) // make move
       expect(rr.queryByRole('highlight')).toBeNull()
       const piece = rr.getByTestId('piece13')
-      const { x, y } = centerOf(d4)
+      const {x, y} = centerOf(d4)
       expect(piece).toHaveAttribute('x', x.toString())
       expect(piece).toHaveAttribute('y', y.toString())
     })
 
-    it('calls passed in "onMoveCompleted" function after quiet move', () => {
-      const onCompleted = jest.fn()
-      const rr = render(<Board onMoveCompleted={onCompleted} />)
-      fireEvent.click(rr.getByRole('c3')) // select piece
-      fireEvent.click(rr.getByRole('d4')) // make move
-      expect(onCompleted).toBeCalled()
+    describe('callback "onMoveCompleted" invoked with correct notation', () => {
+      it(' after quiet move', () => {
+        const onCompleted = jest.fn()
+        const rr = render(<Board onMoveCompleted={onCompleted} />)
+        fireEvent.click(rr.getByRole('c3')) // select piece
+        fireEvent.click(rr.getByRole('d4')) // make move
+        expect(onCompleted).toBeCalledWith('c3-d4')
+      })
+
+      it('after single capture move', () => {
+        const onCompleted = jest.fn()
+        const rr = render(<Board position='c3, d4 h6' onMoveCompleted={onCompleted} />)
+        fireEvent.click(rr.getByRole('c3')) // select piece
+        fireEvent.click(rr.getByRole('e5')) // make move
+        expect(onCompleted).toBeCalledWith('c3:e5')
+      })
+
+      it('after double capture move', () => {
+        const onCompleted = jest.fn()
+        const rr = render(<Board position='c3, d4 f6' onMoveCompleted={onCompleted} />)
+        fireEvent.click(rr.getByRole('c3')) // select piece
+        fireEvent.click(rr.getByRole('e5')) // make move
+        fireEvent.click(rr.getByRole('g7')) // make move
+        expect(onCompleted).toBeCalledWith('c3:e5:g7')
+      })
     })
 
     it('removes captured piece if there is one', () => {
@@ -114,7 +133,7 @@ describe('Board component', () => {
       fireEvent.click(rr.getByRole('c3')) // select piece
       fireEvent.click(rr.getByRole('e5')) // make move
       const selector = rr.queryByRole('highlight')
-      const { x, y } = centerOf(e5)
+      const {x, y} = centerOf(e5)
       expect(selector).toHaveAttribute('cx', x.toString())
       expect(selector).toHaveAttribute('cy', y.toString())
     })
@@ -150,7 +169,7 @@ describe('Board component', () => {
         const rr = render(<Board moves={[]} />)
         rr.rerender(<Board moves={['e3-d4']} />)
         const piece = rr.queryByTestId('piece14')
-        const { x, y } = centerOf(d4)
+        const {x, y} = centerOf(d4)
         expect(piece).toHaveAttribute('x', x.toString())
         expect(piece).toHaveAttribute('y', y.toString())
       })
@@ -190,7 +209,7 @@ describe('Board component', () => {
         const rr = render(<Board position='c3, b6' moves={[]} />)
         rr.rerender(<Board position='c3, b6' moves={['c3-d4']} />)
         const piece = rr.queryByTestId('piece0')
-        const { x, y } = centerOf(d4)
+        const {x, y} = centerOf(d4)
         expect(piece).toHaveAttribute('x', x.toString())
         expect(piece).toHaveAttribute('y', y.toString())
       })

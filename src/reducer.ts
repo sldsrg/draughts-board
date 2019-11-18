@@ -1,4 +1,4 @@
-import { newGame, setUp, shouldCapture } from './tools'
+import {newGame, setUp, shouldCapture} from './tools'
 
 export interface IState {
   board: Array<number | null>,
@@ -24,8 +24,9 @@ export const INITIAL_STATE: IState = {
   whitesTurn: true
 }
 
-export function getReducer(callback?: (notation: string) => void) {
+export function getReducer(callback?: (to: number, capture: boolean, completed: boolean) => void) {
   return (state: IState, action: Action): IState => {
+    let {board, pieces, selection, whitesTurn, belongsToMoveNumber, captureInProgress} = state
     switch (action.type) {
       case 'init':
         if (action.position === undefined) {
@@ -37,32 +38,53 @@ export function getReducer(callback?: (notation: string) => void) {
         if (action.at === undefined) {
           throw new Error('Payload required for action "select"')
         }
-        return {...state, selection: action.at}
+        selection = action.at
+        break
       case 'move':
-        state.board[action.to] = state.board[action.from]
-        state.board[action.from] = null
-        return {...state, board: [...state.board], selection: action.to}
+        board[action.to] = board[action.from]
+        board[action.from] = null
+        selection = action.to
+        break
       case 'remove':
-        state.pieces[state.board[action.from] as number] = ''
-        state.board[action.from] = null
-        state.captureInProgress = true
-        return {...state, board: [...state.board], pieces: [...state.pieces]}
+        pieces[board[action.from] as number] = ''
+        board[action.from] = null
+        captureInProgress = true
+        break
       case 'convert':
-        const id = state.board[action.at] as number
-        const pieces = [...state.pieces]
-        pieces[id] = 'KkMm'.substr('MmKk'.indexOf(state.pieces[id]), 1)
-        return {...state, pieces}
+        const id = board[action.at] as number
+        pieces[id] = 'KkMm'.substr('MmKk'.indexOf(pieces[id]), 1)
+        break
       case 'restore':
-        return {...action.with}
+        ({
+            board,
+            pieces,
+            selection,
+            whitesTurn,
+            belongsToMoveNumber,
+            captureInProgress
+          } = action.with
+        )
+        break
       case 'advance':
-        if (state.captureInProgress && state.selection !== null
-          && shouldCapture(state.board, state.pieces, state.selection as number)) return {...state}
-        const belongsToMoveNumber = (state.belongsToMoveNumber || 1) + 1
-        const whitesTurn = !state.whitesTurn
-        const selection = undefined
-        const captureInProgress = undefined
-        if (callback) callback('1234')
-        return {...state, whitesTurn, belongsToMoveNumber, selection, captureInProgress}
+        if (captureInProgress && selection !== null) {
+          captureInProgress = shouldCapture(board, pieces, selection as number)
+        }
+        if (callback) {
+          callback(selection as number, state.captureInProgress === true,
+            !captureInProgress)
+        }
+        if (captureInProgress) break
+        belongsToMoveNumber = (state.belongsToMoveNumber || 1) + 1
+        whitesTurn = !state.whitesTurn
+        selection = undefined
+        captureInProgress = undefined
+        break
     }
+    return {
+      board: [...board],
+      pieces: [...pieces],
+      whitesTurn, captureInProgress, belongsToMoveNumber, selection
+    }
+
   }
 }

@@ -106,16 +106,16 @@ describe('reducer', () => {
       const board = Array(64).fill(null)
       board[c7] = 0
       board[e1] = 1
-      const savedState = {
+      const savedState: IState = {
         pieces: ['m', 'M'],
         board,
         whitesTurn: true,
         selection: c7,
-        moveNumber: 1
+        belongsToMoveNumber: 1
       }
       const state = newGame()
       const res = reducer(state, {type: 'restore', with: savedState})
-      expect(res).toEqual(savedState)
+      expect(res).toMatchObject(savedState)
     })
   })
 

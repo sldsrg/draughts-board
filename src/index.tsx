@@ -16,9 +16,10 @@ interface IProps {
 
 export function Board(props: IProps) {
   const {background, position, moves, onMoveCompleted} = props
-  const [state, dispatch] = useReducer(getReducer(onMoveCompleted), INITIAL_STATE)
-  const [movesToPlay, setMovesToPlay] = useState<string[]>([])
+  const moveRecord = useRef<string>('')
   const stateLog = useRef<IState[]>([])
+  const [state, dispatch] = useReducer(getReducer(onMoveAdvanced), INITIAL_STATE)
+  const [movesToPlay, setMovesToPlay] = useState<string[]>([])
 
   useEffect(() => {
     dispatch({type: 'init', position})
@@ -54,6 +55,13 @@ export function Board(props: IProps) {
     if (state.belongsToMoveNumber) stateLog.current.push(state)
   }, [state])
 
+  function onMoveAdvanced(to: number, capture: boolean, completed: boolean) {
+    moveRecord.current += (capture ? ':' : '-') + Field.fromIndex(to).toString()
+    if (completed && onMoveCompleted) {
+      onMoveCompleted(moveRecord.current)
+    }
+  }
+
   const pieceClicked = (piece: number) => {
     const square = state.board.findIndex(s => s === piece)
     squareClicked(square)
@@ -65,6 +73,7 @@ export function Board(props: IProps) {
     if (selection !== undefined) {
       if (pieceIndex !== null) { // keep or move selection
         if (whitesTurn === 'MK'.includes(pieces[pieceIndex])) {
+          moveRecord.current = Field.fromIndex(target).toString()
           dispatch({type: 'select', at: target})
         }
       } else {
@@ -83,6 +92,7 @@ export function Board(props: IProps) {
     } else { // select piece
       if (pieceIndex !== null) {
         if (whitesTurn === 'MK'.includes(pieces[pieceIndex])) {
+          moveRecord.current = Field.fromIndex(target).toString()
           dispatch({type: 'select', at: target})
         }
       }
@@ -128,14 +138,14 @@ export function Board(props: IProps) {
       <h1>Draughts Board</h1>
       <svg
         viewBox={`${-MARGIN} ${-MARGIN} ${BOARD_SIZE + MARGIN + MARGIN} ${BOARD_SIZE +
-        MARGIN +
-        MARGIN}`}
+          MARGIN +
+          MARGIN}`}
         style={{
           backgroundColor: 'brown',
           backgroundImage: `url(${background})`
         }}
       >
-        <Definitions/>
+        <Definitions />
         <rect
           x={-(MARGIN + 4) >> 1}
           y={-(MARGIN + 4) >> 1}
