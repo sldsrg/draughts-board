@@ -20,6 +20,19 @@
   },
   "rules": {
     "@typescript-eslint/explicit-function-return-type": "off",
+    "@typescript-eslint/member-delimiter-style": [
+      "error",
+      {
+        "multiline": {
+          "delimiter": "comma",
+          "requireLast": false
+        },
+        "singleline": {
+          "delimiter": "comma",
+          "requireLast": false
+        }
+      }
+    ],
     "react-hooks/rules-of-hooks": "error",
     "react-hooks/exhaustive-deps": "warn",
     "arrow-parens": 0,
@@ -30,6 +43,7 @@
     "no-unused-expression": 0,
     "object-literal-sort-keys": 0,
     "ordered-imports": 0,
+    "space-in-parens": "off",
     "quotes": [
       "error",
       "single"
@@ -39,5 +53,10 @@
       "never"
     ],
     "trailing-comma": 0
+  },
+  "settings": {
+    "react": {
+      "version": "detect"
+    }
   }
 }
