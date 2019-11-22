@@ -6,7 +6,7 @@
   "module": "lib/index.js",
   "types": "lib/index.d.ts",
   "scripts": {
-    "test": "jest --config jest-config.json --no-cache --watch",
+    "test": "jest --config jest-config.json --no-cache --watchAll",
     "prepare": "rollup -c"
   },
   "repository": {

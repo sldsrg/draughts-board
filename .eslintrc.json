@@ -20,6 +20,7 @@
   },
   "rules": {
     "@typescript-eslint/explicit-function-return-type": "off",
+    "@typescript-eslint/no-use-before-define": "off",
     "@typescript-eslint/member-delimiter-style": [
       "error",
       {
@@ -52,7 +53,13 @@
       "error",
       "never"
     ],
-    "trailing-comma": 0
+    "trailing-comma": 0,
+    "max-len": [
+      "error",
+      {
+        "code": 100
+      }
+    ]
   },
   "settings": {
     "react": {
