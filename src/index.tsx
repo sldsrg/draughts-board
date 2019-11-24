@@ -86,15 +86,19 @@ export function Board(props: Props) {
         }
         break
       case 'undo':
+        history.current = history.current.slice(0, moveNumber.current)
         moveNumber.current--
-        dispatch({type: 'restore', with: history.current[moveNumber.current].steps[0]})
+        if (moveNumber.current >= 0)
+          dispatch({type: 'restore', with: history.current[moveNumber.current].steps[0]})
+        else
+          dispatch({type: 'init', position: initialPosition})
     }
     setJobs(rest)
-  }, [board, jobs, pieces])
+  }, [board, initialPosition, jobs, pieces])
 
   useEffect(() => {
     if (moveNumber.current >= 0) {
-      history.current[moveNumber.current].steps.push({board, pieces})
+      history.current[moveNumber.current].steps[0] = {board: [...board], pieces: [...pieces]}
     }
   }, [board, pieces])
 
