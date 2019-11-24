@@ -1,84 +1,120 @@
 import React, {useReducer, useEffect, useRef, useState} from 'react'
 import {BOARD_SIZE, FIELD_SIZE, MARGIN} from './constants'
-import {getReducer, INITIAL_STATE, IState} from './reducer'
+import {reducer, INITIAL_STATE} from './reducer'
 import {Definitions, Glyph} from './glyph'
-import {parseMove, shouldCapture} from './tools'
+import {parseMove, setUp} from './tools'
 import {Field} from './field'
 
 type MoveCallback = (notation: string) => void
 
-interface IProps {
+interface Props {
   background?: string,
   position?: string,
   moves?: string[],
   onMoveCompleted?: MoveCallback
 }
 
-export function Board(props: IProps) {
-  const {background, position, moves, onMoveCompleted} = props
-  const moveRecord = useRef<string>('')
-  const stateLog = useRef<IState[]>([])
-  const [state, dispatch] = useReducer(getReducer(onMoveAdvanced), INITIAL_STATE)
-  const [movesToPlay, setMovesToPlay] = useState<string[]>([])
+interface LogRecord {
+  board: Array<number | null>,
+  pieces: string[]
+}
+
+type Job =
+  {type: 'play', data: string} |
+  {type: 'undo', snapshots: LogRecord[]}
+
+export function Board(props: Props) {
+  const {background, position: initialPosition, moves, onMoveCompleted} = props
+  const [{board, pieces, stage, notation}, dispatch] = useReducer(reducer, INITIAL_STATE)
+  const [selection, setSelection] = useState<number | undefined>()
+  const [whitesTurn, setWhitesTurn] = useState(true)
+  const [jobs, setJobs] = useState<Job[]>([])
+  const history = useRef<Array<{notation: string, steps: LogRecord[]}>>([])
+  const moveNumber = useRef(-1)
 
   useEffect(() => {
-    dispatch({type: 'init', position})
-  }, [position])
-
-  useEffect(() => {
-    if (moves === undefined) {
-      dispatch({type: 'init', position})
-      stateLog.current = []
-      return
+    if (initialPosition) {
+      const {whitesTurn} = setUp(initialPosition)
+      setWhitesTurn(whitesTurn)
     }
-    setMovesToPlay(moves
-      .filter((move, i) => stateLog.current.some(s => (i + 1) >= (s.belongsToMoveNumber || 1)))
-    )
+    dispatch({type: 'init', position: initialPosition})
+  }, [initialPosition])
 
+  useEffect(() => {
+    if (stage === 'pending') {
+      if (onMoveCompleted) {
+        onMoveCompleted(notation)
+      }
+      dispatch({type: 'reset'})
+      history.current[moveNumber.current].notation = notation
+      setSelection(undefined)
+      setWhitesTurn(val => !val)
+    }
+  }, [onMoveCompleted, stage, notation])
+
+  useEffect(() => {
+    if (moves === undefined) return // uncontrolled mode - do nothing
+    if (moves.length > history.current.length) {
+      // play passed to component moves
+      const newJobs: Job[] = moves
+        .slice(history.current.length)
+        .map(move => ({type: 'play', data: move}))
+      setJobs(prev => [...prev, ...newJobs])
+    } else if (moves.length < history.current.length) {
+      // undo played moves to match passed to component
+      const newJobs: Job[] = history.current
+        .slice(moves.length)
+        .map(h => ({type: 'undo', snapshots: h.steps}))
+      setJobs(prev => [...prev, ...newJobs])
+    }
   }, [moves])
 
   useEffect(() => {
-    if (movesToPlay.length === 0) return
-    const [move, ...rest] = movesToPlay
-    const from = Field.parse(move.substr(0, 2))
-    const to = Field.parse(move.substr(3, 2))
-    state.selection = from
-    const actions = parseMove(state, to)
-    if (actions) {
-      actions.map(x => dispatch(x))
-      dispatch({type: 'advance'})
+    if (jobs.length === 0) return
+    const [job, ...rest] = jobs
+    switch (job.type) {
+      case 'play':
+        {
+          const from = Field.parse(job.data.substr(0, 2))
+          const to = Field.parse(job.data.substr(3, 2))
+          const actions = parseMove(board, pieces, from, to)
+          moveNumber.current++
+          history.current[moveNumber.current] = {notation: job.data, steps: []}
+          if (actions) {
+            actions.map(x => dispatch(x))
+          }
+        }
+        break
+      case 'undo':
+        moveNumber.current--
+        dispatch({type: 'restore', with: history.current[moveNumber.current].steps[0]})
     }
-    setMovesToPlay(rest)
-  }, [movesToPlay, state])
+    setJobs(rest)
+  }, [board, jobs, pieces])
 
   useEffect(() => {
-    if (state.belongsToMoveNumber) stateLog.current.push(state)
-  }, [state])
-
-  function onMoveAdvanced(to: number, capture: boolean, completed: boolean) {
-    moveRecord.current += (capture ? ':' : '-') + Field.fromIndex(to).toString()
-    if (completed && onMoveCompleted) {
-      onMoveCompleted(moveRecord.current)
+    if (moveNumber.current >= 0) {
+      history.current[moveNumber.current].steps.push({board, pieces})
     }
-  }
+  }, [board, pieces])
 
   const pieceClicked = (piece: number) => {
-    const square = state.board.findIndex(s => s === piece)
+    const square = board.findIndex(s => s === piece)
     squareClicked(square)
   }
 
   const squareClicked = (target: number) => {
-    const {board, pieces, selection, whitesTurn} = state
     const pieceIndex = board[target]
     if (selection !== undefined) {
       if (pieceIndex !== null) { // keep or move selection
         if (whitesTurn === 'MK'.includes(pieces[pieceIndex])) {
-          moveRecord.current = Field.fromIndex(target).toString()
-          dispatch({type: 'select', at: target})
+          dispatch({type: 'select', sqaure: target})
+          setSelection(target)
         }
       } else {
-        const actions = parseMove(state, target)
-        if (actions !== null) { // make move
+        const actions = parseMove(board, pieces, selection, target)
+        if (actions !== null) {
+          // update position according to move
           actions.forEach(action => dispatch(action))
           if ( // check on man-to-king promotion
             'Mm'.includes(pieces[board[selection] as number]) &&
@@ -86,14 +122,21 @@ export function Board(props: IProps) {
           ) {
             dispatch({type: 'convert', at: target})
           }
-          dispatch({type: 'advance'})
+          if (actions.some(a => a.type === 'remove'))
+            dispatch({type: 'chop', sqaure: target})
+          else
+            dispatch({type: 'hoop', sqaure: target})
+          setSelection(target)
+          // dispatch({type: 'advance'})
         }
       }
-    } else { // select piece
+    } else { // select piece - new move started
       if (pieceIndex !== null) {
         if (whitesTurn === 'MK'.includes(pieces[pieceIndex])) {
-          moveRecord.current = Field.fromIndex(target).toString()
-          dispatch({type: 'select', at: target})
+          moveNumber.current++
+          history.current[moveNumber.current] = {notation: '', steps: []}
+          dispatch({type: 'select', sqaure: target})
+          setSelection(target)
         }
       }
     }
@@ -117,17 +160,17 @@ export function Board(props: IProps) {
         />)
     })
 
-  const glyphs = state.pieces
+  const glyphs = pieces
     .map((code, i) => {
       if (code === '') return
-      const square = state.board.indexOf(i)
+      const square = board.indexOf(i)
       return (
         <Glyph
           key={`piece${i}`}
           id={i}
           code={code}
           square={square}
-          selected={state.selection === square}
+          selected={selection === square}
           onClick={() => pieceClicked(i)}
         />
       )

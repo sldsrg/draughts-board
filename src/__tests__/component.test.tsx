@@ -50,8 +50,8 @@ describe('Board component', () => {
       expect(selector).toHaveAttribute('cy', y.toString())
     })
   })
-  describe('with selected piece', () => {
 
+  describe('with selected piece', () => {
     it('change selection when clicked on another piece that can move', () => {
       const rr = render(<Board />)
       fireEvent.click(rr.getByRole('c3')) // select piece
@@ -201,6 +201,14 @@ describe('Board component', () => {
         rr.rerender(<Board moves={['c3-d4', 'f6-e5', 'd4:f6', 'g7:e5']} />)
         expect(rr.queryAllByRole('white-man')).toHaveLength(11)
         expect(rr.queryAllByRole('black-man')).toHaveLength(11)
+      })
+
+      it('roll back on moves removal', () => {
+        const rr = render(<Board moves={[]} />)
+        rr.rerender(<Board moves={['c3-d4', 'f6-e5', 'd4:f6', 'g7:e5']} />)
+        rr.rerender(<Board moves={['c3-d4', 'f6-e5']} />)
+        expect(rr.queryAllByRole('white-man')).toHaveLength(12)
+        expect(rr.queryAllByRole('black-man')).toHaveLength(12)
       })
     })
 
