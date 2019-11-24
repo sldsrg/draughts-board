@@ -64,6 +64,7 @@ export function Board(props: Props) {
       // undo played moves to match passed to component
       const newJobs: Job[] = history.current
         .slice(moves.length)
+        .reverse()
         .map(h => ({type: 'undo', snapshots: h.steps}))
       setJobs(prev => [...prev, ...newJobs])
     }
@@ -71,7 +72,7 @@ export function Board(props: Props) {
 
   useEffect(() => {
     if (jobs.length === 0) return
-    const [job, ...rest] = jobs
+    const job = jobs[0]
     switch (job.type) {
       case 'play':
         {
@@ -84,7 +85,15 @@ export function Board(props: Props) {
             actions.map(x => dispatch(x))
           }
         }
+        setJobs(prev => prev.slice(1))
         break
+    }
+  }, [board, initialPosition, jobs, pieces])
+
+  useEffect(() => {
+    if (jobs.length === 0) return
+    const job = jobs[0]
+    switch (job.type) {
       case 'undo':
         history.current = history.current.slice(0, moveNumber.current)
         moveNumber.current--
@@ -92,9 +101,9 @@ export function Board(props: Props) {
           dispatch({type: 'restore', with: history.current[moveNumber.current].steps[0]})
         else
           dispatch({type: 'init', position: initialPosition})
+        setTimeout(() => setJobs(prev => prev.slice(1)), 700)
     }
-    setJobs(rest)
-  }, [board, initialPosition, jobs, pieces])
+  }, [initialPosition, jobs])
 
   useEffect(() => {
     if (moveNumber.current >= 0) {
