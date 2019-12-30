@@ -2,7 +2,7 @@ import React, {useReducer, useEffect, useRef, useState} from 'react'
 import {BOARD_SIZE, FIELD_SIZE, MARGIN} from './constants'
 import {reducer, INITIAL_STATE} from './reducer'
 import {Definitions, Glyph} from './glyph'
-import {parseMove, setUp} from './tools'
+import {parseMove, setUp, newGame} from './tools'
 import {Field} from './field'
 
 type MoveCallback = (notation: string) => void
@@ -28,16 +28,58 @@ export function Board(props: Props) {
   const [{board, pieces, stage, notation}, dispatch] = useReducer(reducer, INITIAL_STATE)
   const [selection, setSelection] = useState<number | undefined>()
   const [whitesTurn, setWhitesTurn] = useState(true)
-  const [jobs, setJobs] = useState<Job[]>([])
+  const [queue, setQueue] = useState<Array<Job>>([])
+  const [job, setJob] = useState<Job>()
   const history = useRef<Array<{notation: string, steps: LogRecord[]}>>([])
-  const moveNumber = useRef(-1)
+  const moveNumber = useRef(0)
+
+  useEffect(() => {
+    if (queue.length === 0) return
+    setJob(queue[0])
+    const timer = setTimeout(() => setQueue(q => q.slice(1)), 700)
+    return () => clearTimeout(timer)
+  }, [queue])
+
+  useEffect(
+    () => {
+      if (!job) return
+      switch (job.type) {
+        case 'play':
+          {
+            const from = Field.parse(job.data.substr(0, 2))
+            const to = Field.parse(job.data.substr(3, 2))
+            const actions = parseMove(board, pieces, from, to)
+            if (!history.current[moveNumber.current]) {
+              history.current[moveNumber.current] = {
+                notation: job.data,
+                steps: [{board: [...board], pieces: [...pieces]}]
+              }
+            }
+            if (actions) {
+              actions.map(x => dispatch(x))
+              setWhitesTurn(turn => !turn)
+            }
+          }
+          moveNumber.current++
+          break
+        case 'undo':
+          dispatch({type: 'setup', with: job.snapshots[0]})
+          setWhitesTurn(turn => !turn)
+          moveNumber.current--
+          break
+      }
+      setJob(undefined)
+    }, [job, board, pieces])
 
   useEffect(() => {
     if (initialPosition) {
-      const {whitesTurn} = setUp(initialPosition)
+      const {whitesTurn, board, pieces} = setUp(initialPosition)
       setWhitesTurn(whitesTurn)
+      dispatch({type: 'setup', with: {board, pieces}})
+    } else {
+      setWhitesTurn(true)
+      dispatch({type: 'setup', with: newGame()})
     }
-    dispatch({type: 'init', position: initialPosition})
   }, [initialPosition])
 
   useEffect(() => {
@@ -47,6 +89,7 @@ export function Board(props: Props) {
       }
       dispatch({type: 'reset'})
       history.current[moveNumber.current].notation = notation
+      moveNumber.current++
       setSelection(undefined)
       setWhitesTurn(val => !val)
     }
@@ -54,62 +97,23 @@ export function Board(props: Props) {
 
   useEffect(() => {
     if (moves === undefined) return // uncontrolled mode - do nothing
-    if (moves.length > history.current.length) {
+    if (moves.length - moveNumber.current > 0) {
       // play passed to component moves
-      const newJobs: Job[] = moves
-        .slice(history.current.length)
-        .map(move => ({type: 'play', data: move}))
-      setJobs(prev => [...prev, ...newJobs])
-    } else if (moves.length < history.current.length) {
+      const jobs = moves
+        .slice(moveNumber.current)
+        .map(move => ({type: 'play', data: move} as Job))
+      setQueue(q => [...q, ...jobs])
+      if (selection) setSelection(undefined)
+    } else if (moves.length - moveNumber.current < 0) {
       // undo played moves to match passed to component
-      const newJobs: Job[] = history.current
-        .slice(moves.length)
+      const jobs = history.current.slice(moves.length, moveNumber.current)
         .reverse()
-        .map(h => ({type: 'undo', snapshots: h.steps}))
-      setJobs(prev => [...prev, ...newJobs])
+        .map(({steps}) => ({type: 'undo', snapshots: steps} as Job))
+
+      setQueue(q => [...q, ...jobs])
+      if (selection) setSelection(undefined)
     }
   }, [moves])
-
-  useEffect(() => {
-    if (jobs.length === 0) return
-    const job = jobs[0]
-    switch (job.type) {
-      case 'play':
-        {
-          const from = Field.parse(job.data.substr(0, 2))
-          const to = Field.parse(job.data.substr(3, 2))
-          const actions = parseMove(board, pieces, from, to)
-          moveNumber.current++
-          history.current[moveNumber.current] = {notation: job.data, steps: []}
-          if (actions) {
-            actions.map(x => dispatch(x))
-          }
-        }
-        setJobs(prev => prev.slice(1))
-        break
-    }
-  }, [board, initialPosition, jobs, pieces])
-
-  useEffect(() => {
-    if (jobs.length === 0) return
-    const job = jobs[0]
-    switch (job.type) {
-      case 'undo':
-        history.current = history.current.slice(0, moveNumber.current)
-        moveNumber.current--
-        if (moveNumber.current >= 0)
-          dispatch({type: 'restore', with: history.current[moveNumber.current].steps[0]})
-        else
-          dispatch({type: 'init', position: initialPosition})
-        setTimeout(() => setJobs(prev => prev.slice(1)), 700)
-    }
-  }, [initialPosition, jobs])
-
-  useEffect(() => {
-    if (moveNumber.current >= 0) {
-      history.current[moveNumber.current].steps[0] = {board: [...board], pieces: [...pieces]}
-    }
-  }, [board, pieces])
 
   const pieceClicked = (piece: number) => {
     const square = board.findIndex(s => s === piece)
@@ -121,12 +125,14 @@ export function Board(props: Props) {
     if (selection !== undefined) {
       if (pieceIndex !== null) { // keep or move selection
         if (whitesTurn === 'MK'.includes(pieces[pieceIndex])) {
-          dispatch({type: 'select', sqaure: target})
+          dispatch({type: 'select', square: target})
           setSelection(target)
         }
       } else {
         const actions = parseMove(board, pieces, selection, target)
         if (actions !== null) {
+          // save previous position
+          history.current[moveNumber.current].steps[0] = {board: [...board], pieces: [...pieces]}
           // update position according to move
           actions.forEach(action => dispatch(action))
           if ( // check on man-to-king promotion
@@ -136,19 +142,18 @@ export function Board(props: Props) {
             dispatch({type: 'convert', at: target})
           }
           if (actions.some(a => a.type === 'remove'))
-            dispatch({type: 'chop', sqaure: target})
+            dispatch({type: 'chop', square: target})
           else
-            dispatch({type: 'hoop', sqaure: target})
+            dispatch({type: 'hoop', square: target})
           setSelection(target)
           // dispatch({type: 'advance'})
         }
       }
-    } else { // select piece - new move started
+    } else { // select piece
       if (pieceIndex !== null) {
         if (whitesTurn === 'MK'.includes(pieces[pieceIndex])) {
-          moveNumber.current++
           history.current[moveNumber.current] = {notation: '', steps: []}
-          dispatch({type: 'select', sqaure: target})
+          dispatch({type: 'select', square: target})
           setSelection(target)
         }
       }
@@ -191,7 +196,7 @@ export function Board(props: Props) {
 
   return (
     <div>
-      <h1>Draughts Board</h1>
+      <h2>{whitesTurn ? 'whites' : 'blacks'} to move</h2>
       <svg
         viewBox={`${-MARGIN} ${-MARGIN} ${BOARD_SIZE + MARGIN + MARGIN} ${BOARD_SIZE +
           MARGIN +

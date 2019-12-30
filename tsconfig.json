@@ -9,7 +9,11 @@
     "noImplicitAny": true,
     "strictNullChecks": true,
     "target": "es6",
-    "lib": ["dom", "dom.iterable", "esnext"],
+    "lib": [
+      "dom",
+      "dom.iterable",
+      "esnext"
+    ],
     "skipLibCheck": true,
     "module": "esnext",
     "outDir": "./lib"
@@ -22,5 +26,10 @@
     "excludeNotExported": true,
     "target": "ES2015"
   },
-  "include": ["src/**/*"]
+  "include": [
+    "src/**/*"
+  ],
+  "exclude": [
+    "src/__tests__/"
+  ]
 }

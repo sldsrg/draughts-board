@@ -1,5 +1,5 @@
-import {newGame, setUp, shouldCapture} from './tools'
-import {Field} from './field'
+import { shouldCapture } from './tools'
+import { Field } from './field'
 
 export interface State {
   // position related state
@@ -12,21 +12,21 @@ export interface State {
 
 export type Action =
   // position related actions
-  {type: 'init', position?: string} |
-  {type: 'move', from: number, to: number} |
-  {type: 'remove', from: number} |
-  {type: 'convert', at: number} |
+  // { type: 'init', position?: string } |
   {
-    type: 'restore', with: {
+    type: 'setup', with: {
       board: Array<number | null>,
       pieces: string[]
     }
   } |
+  { type: 'move', from: number, to: number } |
+  { type: 'remove', from: number } |
+  { type: 'convert', at: number } |
   // interaction related actions
-  {type: 'select', sqaure: number} |
-  {type: 'hoop', sqaure: number} |
-  {type: 'chop', sqaure: number} |
-  {type: 'reset'}
+  { type: 'select', square: number } |
+  { type: 'hoop', square: number } |
+  { type: 'chop', square: number } |
+  { type: 'reset' }
 
 export const INITIAL_STATE: State = {
   pieces: [],
@@ -36,14 +36,11 @@ export const INITIAL_STATE: State = {
 }
 
 export function reducer(state: State, action: Action): State {
-  let {board, pieces, stage, notation} = state
+  let { board, pieces, stage, notation } = state
   switch (action.type) {
-    case 'init': // TODO: replace with setup action (position only)
-      if (action.position === undefined) {
-        return {...INITIAL_STATE, ...newGame()}
-      } else {
-        return {...INITIAL_STATE, ...setUp(action.position as string)}
-      }
+    case 'setup':
+      ({ board, pieces } = action.with)
+      break
     case 'move':
       board[action.to] = board[action.from]
       board[action.from] = null
@@ -58,16 +55,13 @@ export function reducer(state: State, action: Action): State {
         pieces[id] = 'KkMm'.substr('MmKk'.indexOf(pieces[id]), 1)
       }
       break
-    case 'restore': // TODO: merge with setup action
-      ({board, pieces} = action.with)
-      break
     case 'select':
       stage = 'initiation'
-      notation = Field.fromIndex(action.sqaure).toString()
+      notation = Field.fromIndex(action.square).toString()
       break
     case 'hoop':
       if (state.stage === 'initiation') {
-        const target = Field.fromIndex(action.sqaure).toString()
+        const target = Field.fromIndex(action.square).toString()
         stage = 'pending'
         notation = `${state.notation}-${target}`
       } else {
@@ -76,9 +70,9 @@ export function reducer(state: State, action: Action): State {
       break
     case 'chop':
       if (['initiation', 'capture'].includes(state.stage)) {
-        const target = Field.fromIndex(action.sqaure).toString()
+        const target = Field.fromIndex(action.square).toString()
         notation = `${state.notation}:${target}`
-        stage = shouldCapture(board, pieces, action.sqaure) ? 'capture' : 'pending'
+        stage = shouldCapture(board, pieces, action.square) ? 'capture' : 'pending'
       } else {
         throw new Error('Illegal state on action "chop"')
       }

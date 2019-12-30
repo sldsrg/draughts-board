@@ -4,34 +4,6 @@ import {newGame, setUp} from '../tools'
 
 describe('reducer', () => {
 
-  describe('action "init" ', () => {
-    let state: State
-
-    beforeEach(() => {
-      // some dirty state
-      const board = Array(64).fill(null)
-      board[a7] = 0
-      board[g1] = 1
-      state = {
-        pieces: ['m', 'M'],
-        board,
-        stage: 'idle',
-        notation: ''
-      }
-    })
-
-    it('assigns initial position when payload is undefined', () => {
-      const res = reducer(state, {type: 'init'})
-      expect(res).toMatchObject(newGame())
-    })
-
-    it('assigns specified in payload position', () => {
-      const res = reducer(state, {type: 'init', position: 'a1 b2, a7 b8'})
-      expect(res.board.filter(x => x !== null)).toHaveLength(4)
-      expect(res.pieces).toHaveLength(4)
-    })
-  })
-
   describe('action "move"', () => {
     it('changes board according to source and target from payload', () => {
       const state = {...INITIAL_STATE, ...newGame()}
@@ -66,7 +38,7 @@ describe('reducer', () => {
     })
   })
 
-  describe('action "restore"', () => {
+  describe('action "setup"', () => {
     it('restore previously saved state', () => {
       const board = Array(64).fill(null)
       board[c7] = 0
@@ -78,80 +50,79 @@ describe('reducer', () => {
         notation: ''
       }
       const state = {...INITIAL_STATE, ...newGame()}
-      const res = reducer(state, {type: 'restore', with: savedState})
+      const res = reducer(state, {type: 'setup', with: savedState})
       expect(res).toMatchObject(savedState)
     })
   })
 
-
   describe('action "select"', () => {
     it('changes stage to "initiation"', () => {
       const state = INITIAL_STATE
-      const res = reducer(state, {type: 'select', sqaure: a1})
+      const res = reducer(state, {type: 'select', square: a1})
       expect(res.stage).toBe('initiation')
     })
 
     it('updates move notation to selected square', () => {
       const state = INITIAL_STATE
-      const res = reducer(state, {type: 'select', sqaure: a1})
+      const res = reducer(state, {type: 'select', square: a1})
       expect(res.notation).toBe('a1')
     })
 
     it('replaces previous notation in case of reselection', () => {
       const state = INITIAL_STATE
-      let res = reducer(state, {type: 'select', sqaure: a1})
-      res = reducer(state, {type: 'select', sqaure: c1})
+      let res = reducer(state, {type: 'select', square: a1})
+      res = reducer(state, {type: 'select', square: c1})
       expect(res.notation).toBe('c1')
     })
   })
 
   describe('action "hoop"', () => {
-    it('raises expection when dispatched on stage "idle"', () => {
+    it('raises exception when dispatched on stage "idle"', () => {
       const state = INITIAL_STATE
-      expect(() => reducer(state, {type: 'hoop', sqaure: c3})).toThrow()
+      expect(() => reducer(state, {type: 'hoop', square: c3})).toThrow()
     })
 
-    it('raises expection when dispatched on stage "capture"', () => {
+    it('raises exception when dispatched on stage "capture"', () => {
       const state = INITIAL_STATE
       state.stage = 'capture'
-      expect(() => reducer(state, {type: 'hoop', sqaure: c3})).toThrow()
+      expect(() => reducer(state, {type: 'hoop', square: c3})).toThrow()
     })
 
-    it('raises expection when dispatched on stage "pending"', () => {
+    it('raises exception when dispatched on stage "pending"', () => {
       const state = INITIAL_STATE
       state.stage = 'pending'
-      expect(() => reducer(state, {type: 'hoop', sqaure: c3})).toThrow()
+      expect(() => reducer(state, {type: 'hoop', square: c3})).toThrow()
     })
 
     it('appends hyphen and square to notation', () => {
       const state: State = {board: [], pieces: [], stage: 'initiation', notation: 'a1'}
-      const res = reducer(state, {type: 'hoop', sqaure: c3})
+      const res = reducer(state, {type: 'hoop', square: c3})
       expect(res.notation).toBe('a1-c3')
     })
 
     it('changes stage to "pending"', () => {
       const state: State = {board: [], pieces: [], stage: 'initiation', notation: 'a1'}
-      const res = reducer(state, {type: 'hoop', sqaure: c3})
+      const res = reducer(state, {type: 'hoop', square: c3})
       expect(res.stage).toBe('pending')
     })
 
   })
 
   describe('action "chop"', () => {
-    it('raises expection when dispatched on stage "idle"', () => {
+    it('raises exception when dispatched on stage "idle"', () => {
       const state = INITIAL_STATE
-      expect(() => reducer(state, {type: 'chop', sqaure: c3})).toThrow()
+      expect(() => reducer(state, {type: 'chop', square: c3})).toThrow()
     })
 
-    it('raises expection when dispatched on stage "pending"', () => {
+    it('raises exception when dispatched on stage "pending"', () => {
       const state = INITIAL_STATE
       state.stage = 'pending'
-      expect(() => reducer(state, {type: 'chop', sqaure: c3})).toThrow()
+      expect(() => reducer(state, {type: 'chop', square: c3})).toThrow()
     })
 
     it('appends colon and square to notation', () => {
       const state: State = {board: [], pieces: [], stage: 'initiation', notation: 'a1'}
-      const res = reducer(state, {type: 'chop', sqaure: c3})
+      const res = reducer(state, {type: 'chop', square: c3})
       expect(res.notation).toBe('a1:c3')
     })
 
@@ -159,7 +130,7 @@ describe('reducer', () => {
       const state = {...INITIAL_STATE, ...setUp('c3, b2 d4')}
       state.stage = 'initiation'
       state.notation = 'a1'
-      const res = reducer(state, {type: 'chop', sqaure: c3})
+      const res = reducer(state, {type: 'chop', square: c3})
       expect(res.stage).toBe('capture')
     })
   })
