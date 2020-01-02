@@ -117,7 +117,7 @@ describe('board', () => {
       })
     })
 
-    describe('for man\'s move with capture', () => {
+    describe("for man's move with capture", () => {
       it('returns null when captured piece missed', () => {
         const {board, pieces} = setUp('e3 g3, b6 d6')
         expect(parseMove(board, pieces, g3, e5)).toBeNull()

@@ -12,7 +12,8 @@
       "args": [
         "--config",
         "jest-config.json",
-        "--runInBand"
+        "--runInBand",
+        "--watch"
       ],
       "cwd": "${workspaceRoot}",
       "protocol": "inspector",

@@ -1,10 +1,10 @@
 import '@testing-library/jest-dom/extend-expect'
 import React from 'react'
-import { act } from 'react-dom/test-utils'
-import { render, fireEvent, cleanup, RenderResult, prettyDOM } from '@testing-library/react'
+import {act} from 'react-dom/test-utils'
+import {render, fireEvent, cleanup, RenderResult, prettyDOM} from '@testing-library/react'
 
-import { Board } from '../index'
-import { centerOf, c3, e3, d4, e5 } from './utils/namedSquares'
+import {Board} from '../index'
+import {centerOf, c3, e3, d4, e5} from './utils/namedSquares'
 
 jest.useFakeTimers()
 afterEach(cleanup)
@@ -54,7 +54,7 @@ describe('Board component', () => {
       })
       const selector = rr.queryByRole('highlight')
       expect(selector).not.toBeNull()
-      const { x, y } = centerOf(c3)
+      const {x, y} = centerOf(c3)
       expect(selector).toHaveAttribute('cx', x.toString())
       expect(selector).toHaveAttribute('cy', y.toString())
     })
@@ -70,7 +70,7 @@ describe('Board component', () => {
         fireEvent.click(rr.getByRole('e3')) // select another
       })
       const selector = rr.queryByRole('highlight')
-      const { x, y } = centerOf(e3)
+      const {x, y} = centerOf(e3)
       expect(selector).toHaveAttribute('cx', x.toString())
       expect(selector).toHaveAttribute('cy', y.toString())
     })
@@ -84,7 +84,7 @@ describe('Board component', () => {
         fireEvent.click(rr.getByRole('b6')) // ignore
       })
       const selector = rr.queryByRole('highlight')
-      const { x, y } = centerOf(c3)
+      const {x, y} = centerOf(c3)
       expect(selector).toHaveAttribute('cx', x.toString())
       expect(selector).toHaveAttribute('cy', y.toString())
     })
@@ -98,7 +98,7 @@ describe('Board component', () => {
         fireEvent.click(rr.getByRole('c5')) // ignore
       })
       const selector = rr.queryByRole('highlight')
-      const { x, y } = centerOf(c3)
+      const {x, y} = centerOf(c3)
       expect(selector).toHaveAttribute('cx', x.toString())
       expect(selector).toHaveAttribute('cy', y.toString())
     })
@@ -113,7 +113,7 @@ describe('Board component', () => {
       })
       expect(rr.queryByRole('highlight')).toBeNull()
       const piece = rr.getByTestId('piece13')
-      const { x, y } = centerOf(d4)
+      const {x, y} = centerOf(d4)
       expect(piece).toHaveAttribute('x', x.toString())
       expect(piece).toHaveAttribute('y', y.toString())
     })
@@ -179,7 +179,7 @@ describe('Board component', () => {
           fireEvent.click(rr.getByRole('e5')) // make move
         })
         const selector = rr.queryByRole('highlight')
-        const { x, y } = centerOf(e5)
+        const {x, y} = centerOf(e5)
         expect(selector).toHaveAttribute('cx', x.toString())
         expect(selector).toHaveAttribute('cy', y.toString())
       })
@@ -231,7 +231,7 @@ describe('Board component', () => {
             jest.runAllTimers()
           })
           const piece = rr.queryByTestId('piece14')
-          const { x, y } = centerOf(d4)
+          const {x, y} = centerOf(d4)
           expect(piece).toHaveAttribute('x', x.toString())
           expect(piece).toHaveAttribute('y', y.toString())
         })
@@ -271,6 +271,15 @@ describe('Board component', () => {
           })
           expect(rr.queryAllByRole('white-man')).toHaveLength(11)
           expect(rr.queryAllByRole('black-man')).toHaveLength(11)
+        })
+
+        it('properly handles multi-capture move', () => {
+          const rr = render(<Board moves={['e3-d4', 'b6-a5', 'c3-b4', 'a5:c3:e5']} />)
+          act(() => {
+            jest.runAllTimers()
+          })
+          expect(rr.queryAllByRole('white-man')).toHaveLength(10)
+          expect(rr.queryAllByRole('black-man')).toHaveLength(12)
         })
 
         it('roll back on partial moves removal', () => {
@@ -327,7 +336,7 @@ describe('Board component', () => {
             jest.runAllTimers()
           })
           const piece = rr.queryByTestId('piece0')
-          const { x, y } = centerOf(d4)
+          const {x, y} = centerOf(d4)
           expect(piece).toHaveAttribute('x', x.toString())
           expect(piece).toHaveAttribute('y', y.toString())
         })

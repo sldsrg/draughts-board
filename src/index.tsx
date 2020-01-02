@@ -21,7 +21,8 @@ interface LogRecord {
 
 type Job =
   {type: 'play', data: string} |
-  {type: 'undo', snapshots: LogRecord[]}
+  {type: 'undo', snapshots: LogRecord[]} |
+  {type: 'turn', forwards: boolean}
 
 export function Board(props: Props) {
   const {background, position: initialPosition, moves, onMoveCompleted} = props
@@ -57,15 +58,15 @@ export function Board(props: Props) {
             }
             if (actions) {
               actions.map(x => dispatch(x))
-              setWhitesTurn(turn => !turn)
             }
           }
-          moveNumber.current++
           break
         case 'undo':
           dispatch({type: 'setup', with: job.snapshots[0]})
+          break
+        case 'turn':
+          moveNumber.current += job.forwards ? 1 : -1
           setWhitesTurn(turn => !turn)
-          moveNumber.current--
           break
       }
       setJob(undefined)
@@ -95,21 +96,41 @@ export function Board(props: Props) {
     }
   }, [onMoveCompleted, stage, notation])
 
+  function moveToJobs(move: String): Job[] {
+    if (move.length < 6) {
+      return [
+        {type: 'play', data: move} as Job,
+        {type: 'turn', forwards: true} as Job
+      ]
+    } else {
+      return [
+        ...move.split(':')
+          .reduce((acc, cur) => `${acc}:${cur},${cur}`)
+          .split(',')
+          .slice(0, -1)
+          .map(x => ({type: 'play', data: x} as Job)),
+        {type: 'turn', forwards: true} as Job
+      ]
+    }
+  }
+
   useEffect(() => {
     if (moves === undefined) return // uncontrolled mode - do nothing
     if (moves.length - moveNumber.current > 0) {
       // play passed to component moves
       const jobs = moves
         .slice(moveNumber.current)
-        .map(move => ({type: 'play', data: move} as Job))
+        .flatMap(move => moveToJobs(move))
       setQueue(q => [...q, ...jobs])
       if (selection) setSelection(undefined)
     } else if (moves.length - moveNumber.current < 0) {
       // undo played moves to match passed to component
       const jobs = history.current.slice(moves.length, moveNumber.current)
         .reverse()
-        .map(({steps}) => ({type: 'undo', snapshots: steps} as Job))
-
+        .flatMap(({steps}) => [
+          {type: 'undo', snapshots: steps} as Job,
+          {type: 'turn', forwards: false} as Job
+        ])
       setQueue(q => [...q, ...jobs])
       if (selection) setSelection(undefined)
     }
