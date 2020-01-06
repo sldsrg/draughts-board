@@ -38,7 +38,7 @@ describe('reducer', () => {
     })
   })
 
-  describe('action "setup"', () => {
+  describe('action "restore"', () => {
     it('restore previously saved state', () => {
       const board = Array(64).fill(null)
       board[c7] = 0
@@ -50,7 +50,7 @@ describe('reducer', () => {
         notation: ''
       }
       const state = {...INITIAL_STATE, ...newGame()}
-      const res = reducer(state, {type: 'setup', with: savedState})
+      const res = reducer(state, {type: 'restore', with: savedState})
       expect(res).toMatchObject(savedState)
     })
   })

@@ -9,6 +9,10 @@ import {centerOf, c3, e3, d4, e5} from './utils/namedSquares'
 jest.useFakeTimers()
 afterEach(cleanup)
 
+function runAllTimers() {
+  jest.runAllTimers()
+}
+
 describe('Board component', () => {
 
   describe('wen rendered with undefined position property', () => {
@@ -227,9 +231,7 @@ describe('Board component', () => {
 
         it('properly changes position when passed single move', () => {
           const rr = render(<Board moves={['e3-d4']} />)
-          act(() => {
-            jest.runAllTimers()
-          })
+          act(runAllTimers)
           const piece = rr.queryByTestId('piece14')
           const {x, y} = centerOf(d4)
           expect(piece).toHaveAttribute('x', x.toString())
@@ -238,9 +240,7 @@ describe('Board component', () => {
 
         it('properly changes position when passed two moves', () => {
           const rr = render(<Board moves={['e3-d4', 'd6-e5']} />)
-          act(() => {
-            jest.runAllTimers()
-          })
+          act(runAllTimers)
           const piece9 = rr.queryByTestId('piece9')
           const piece14 = rr.queryByTestId('piece14')
           const pos9 = centerOf(e5)
@@ -253,46 +253,34 @@ describe('Board component', () => {
 
         it('moves with capture change material balance', () => {
           const rr = render(<Board moves={['c3-d4', 'f6-e5', 'd4:f6', 'g7:e5']} />)
-          act(() => {
-            jest.runAllTimers()
-          })
+          act(runAllTimers)
           expect(rr.queryAllByRole('white-man')).toHaveLength(11)
           expect(rr.queryAllByRole('black-man')).toHaveLength(11)
         })
 
         it('respects previously played moves', () => {
           const rr = render(<Board moves={['c3-d4', 'f6-e5']} />)
-          act(() => {
-            jest.runAllTimers()
-          })
+          act(runAllTimers)
           rr.rerender(<Board moves={['c3-d4', 'f6-e5', 'd4:f6', 'g7:e5']} />)
-          act(() => {
-            jest.runAllTimers()
-          })
+          act(runAllTimers)
           expect(rr.queryAllByRole('white-man')).toHaveLength(11)
           expect(rr.queryAllByRole('black-man')).toHaveLength(11)
         })
 
         it('properly handles multi-capture move', () => {
           const rr = render(<Board moves={['e3-d4', 'b6-a5', 'c3-b4', 'a5:c3:e5']} />)
-          act(() => {
-            jest.runAllTimers()
-          })
+          act(runAllTimers)
           expect(rr.queryAllByRole('white-man')).toHaveLength(10)
           expect(rr.queryAllByRole('black-man')).toHaveLength(12)
         })
 
         it('roll back on partial moves removal', () => {
           const rr = render(<Board moves={['c3-d4', 'f6-e5', 'd4:f6', 'g7:e5']} />)
-          act(() => {
-            jest.runAllTimers()
-          })
+          act(runAllTimers)
           expect(rr.queryAllByRole('white-man')).toHaveLength(11)
           expect(rr.queryAllByRole('black-man')).toHaveLength(11)
           rr.rerender(<Board moves={['c3-d4', 'f6-e5']} />)
-          act(() => {
-            jest.runAllTimers()
-          })
+          act(runAllTimers)
           expect(rr.queryAllByRole('white-man')).toHaveLength(12)
           expect(rr.queryAllByRole('black-man')).toHaveLength(12)
         })
@@ -301,13 +289,21 @@ describe('Board component', () => {
           const rr = render(<Board moves={[]} />)
           const before = prettyDOM(rr.container.firstChild as Element, 100000)
           rr.rerender(<Board moves={['c3-d4', 'f6-e5', 'd4:f6', 'g7:e5']} />)
-          act(() => {
-            jest.runAllTimers()
-          })
+          act(runAllTimers)
           rr.rerender(<Board moves={[]} />)
-          act(() => {
-            jest.runAllTimers()
-          })
+          act(runAllTimers)
+          const after = prettyDOM(rr.container.firstChild as Element, 100000)
+          expect(after).toBe(before)
+        })
+
+        it('properly handles rollback with multi-capture move', () => {
+          const rr = render(<Board moves={['c3-d4', 'f6-g5', 'e3-f4']} />)
+          act(runAllTimers)
+          const before = prettyDOM(rr.container.firstChild as Element, 100000)
+          rr.rerender(<Board moves={['c3-d4', 'f6-g5', 'e3-f4', 'g5:e3:c5']} />)
+          act(runAllTimers)
+          rr.rerender(<Board moves={['c3-d4', 'f6-g5', 'e3-f4']} />)
+          act(runAllTimers)
           const after = prettyDOM(rr.container.firstChild as Element, 100000)
           expect(after).toBe(before)
         })
@@ -321,9 +317,7 @@ describe('Board component', () => {
             fireEvent.click(rr.getByRole('d2')) // select piece
           })
           rr.rerender(<Board moves={[]} />)
-          act(() => {
-            jest.runAllTimers()
-          })
+          act(runAllTimers)
           const after = prettyDOM(rr.container.firstChild as Element, 100000)
           expect(after).toBe(before)
         })
@@ -332,9 +326,7 @@ describe('Board component', () => {
       describe('with specified position', () => {
         it('properly changes position when passed single move', () => {
           const rr = render(<Board position='c3, b6' moves={['c3-d4']} />)
-          act(() => {
-            jest.runAllTimers()
-          })
+          act(runAllTimers)
           const piece = rr.queryByTestId('piece0')
           const {x, y} = centerOf(d4)
           expect(piece).toHaveAttribute('x', x.toString())
@@ -345,13 +337,21 @@ describe('Board component', () => {
           const rr = render(<Board position='c3, b6' moves={[]} />)
           const before = prettyDOM(rr.container.firstChild as Element, 100000)
           rr.rerender(<Board position='c3, b6' moves={['c3-d4', 'b6-e5', 'd4:f6']} />)
-          act(() => {
-            jest.runAllTimers()
-          })
+          act(runAllTimers)
           rr.rerender(<Board position='c3, b6' moves={[]} />)
-          act(() => {
-            jest.runAllTimers()
-          })
+          act(runAllTimers)
+          const after = prettyDOM(rr.container.firstChild as Element, 100000)
+          expect(after).toBe(before)
+        })
+
+        it('properly handles rollback with multi-capture move', () => {
+          const rr = render(<Board position='c1, f4 g5 h8' moves={['c1-d2', 'f4-e3']} />)
+          act(runAllTimers)
+          const before = prettyDOM(rr.container.firstChild as Element, 100000)
+          rr.rerender(<Board position='c1, f4 g5 h8' moves={['c1-d2', 'f4-e3', 'd2:f4:h6']} />)
+          act(runAllTimers)
+          rr.rerender(<Board position='c1, f4 g5 h8' moves={['c1-d2', 'f4-e3']} />)
+          act(runAllTimers)
           const after = prettyDOM(rr.container.firstChild as Element, 100000)
           expect(after).toBe(before)
         })

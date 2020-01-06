@@ -4,6 +4,7 @@ import {reducer, INITIAL_STATE} from './reducer'
 import {Definitions, Glyph} from './glyph'
 import {parseMove, setUp, newGame} from './tools'
 import {Field} from './field'
+import {Job, moveToJobs, StepRecord} from './job'
 
 type MoveCallback = (notation: string) => void
 
@@ -14,16 +15,6 @@ interface Props {
   onMoveCompleted?: MoveCallback
 }
 
-interface LogRecord {
-  board: Array<number | null>,
-  pieces: string[]
-}
-
-type Job =
-  {type: 'play', data: string} |
-  {type: 'undo', snapshots: LogRecord[]} |
-  {type: 'turn', forwards: boolean}
-
 export function Board(props: Props) {
   const {background, position: initialPosition, moves, onMoveCompleted} = props
   const [{board, pieces, stage, notation}, dispatch] = useReducer(reducer, INITIAL_STATE)
@@ -31,7 +22,9 @@ export function Board(props: Props) {
   const [whitesTurn, setWhitesTurn] = useState(true)
   const [queue, setQueue] = useState<Array<Job>>([])
   const [job, setJob] = useState<Job>()
-  const history = useRef<Array<{notation: string, steps: LogRecord[]}>>([])
+  const history = useRef<Array<{notation: string, steps: StepRecord[]}>>([
+    {notation: '', steps: []}
+  ])
   const moveNumber = useRef(0)
 
   useEffect(() => {
@@ -46,26 +39,25 @@ export function Board(props: Props) {
       if (!job) return
       switch (job.type) {
         case 'play':
-          {
-            const from = Field.parse(job.data.substr(0, 2))
-            const to = Field.parse(job.data.substr(3, 2))
-            const actions = parseMove(board, pieces, from, to)
-            if (!history.current[moveNumber.current]) {
-              history.current[moveNumber.current] = {
-                notation: job.data,
-                steps: [{board: [...board], pieces: [...pieces]}]
-              }
-            }
-            if (actions) {
-              actions.map(x => dispatch(x))
-            }
-          }
+          parseMove(board, pieces,
+            Field.parse(job.data.substr(0, 2)),
+            Field.parse(job.data.substr(3, 2))
+          )?.map(x => dispatch(x))
+          console.log(`PLAY ${job.data}`)
+
+          history.current[moveNumber.current]?.steps.push({board: [...board], pieces: [...pieces]})
           break
         case 'undo':
-          dispatch({type: 'setup', with: job.snapshots[0]})
+          console.log('UNDO')
+
+          dispatch({type: 'restore', with: job.snapshot})
           break
         case 'turn':
+
+          console.log('TURN')
+
           moveNumber.current += job.forwards ? 1 : -1
+          history.current[moveNumber.current] = {notation: 'TODO TURN', steps: []}
           setWhitesTurn(turn => !turn)
           break
       }
@@ -76,10 +68,10 @@ export function Board(props: Props) {
     if (initialPosition) {
       const {whitesTurn, board, pieces} = setUp(initialPosition)
       setWhitesTurn(whitesTurn)
-      dispatch({type: 'setup', with: {board, pieces}})
+      dispatch({type: 'restore', with: {board, pieces}})
     } else {
       setWhitesTurn(true)
-      dispatch({type: 'setup', with: newGame()})
+      dispatch({type: 'restore', with: newGame()})
     }
   }, [initialPosition])
 
@@ -96,31 +88,13 @@ export function Board(props: Props) {
     }
   }, [onMoveCompleted, stage, notation])
 
-  function moveToJobs(move: String): Job[] {
-    if (move.length < 6) {
-      return [
-        {type: 'play', data: move} as Job,
-        {type: 'turn', forwards: true} as Job
-      ]
-    } else {
-      return [
-        ...move.split(':')
-          .reduce((acc, cur) => `${acc}:${cur},${cur}`)
-          .split(',')
-          .slice(0, -1)
-          .map(x => ({type: 'play', data: x} as Job)),
-        {type: 'turn', forwards: true} as Job
-      ]
-    }
-  }
-
   useEffect(() => {
     if (moves === undefined) return // uncontrolled mode - do nothing
     if (moves.length - moveNumber.current > 0) {
       // play passed to component moves
       const jobs = moves
         .slice(moveNumber.current)
-        .flatMap(move => moveToJobs(move))
+        .flatMap(move => moveToJobs(move)) // TODO: init history record
       setQueue(q => [...q, ...jobs])
       if (selection) setSelection(undefined)
     } else if (moves.length - moveNumber.current < 0) {
@@ -128,7 +102,7 @@ export function Board(props: Props) {
       const jobs = history.current.slice(moves.length, moveNumber.current)
         .reverse()
         .flatMap(({steps}) => [
-          {type: 'undo', snapshots: steps} as Job,
+          ...steps.reverse().map(step => ({type: 'undo', snapshot: step} as Job)),
           {type: 'turn', forwards: false} as Job
         ])
       setQueue(q => [...q, ...jobs])
