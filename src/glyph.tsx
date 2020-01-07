@@ -41,7 +41,7 @@ export function Definitions() {
   )
 }
 
-interface IProps {
+interface GlyphProps {
   id: number,
   code: string,
   square: number,
@@ -49,7 +49,7 @@ interface IProps {
   onClick: (event: React.MouseEvent) => void
 }
 
-export function Glyph(props: IProps) {
+export function Glyph(props: GlyphProps) {
   const { id, code, square, selected, onClick } = props
   const classes = useStyles()
   const row = square >> 3

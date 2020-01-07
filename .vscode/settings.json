@@ -1,5 +1,0 @@
-{
-  "tslint.packageManager": "yarn",
-  "npm.packageManager": "yarn",
-  "eslint.packageManager": "yarn",
-}
