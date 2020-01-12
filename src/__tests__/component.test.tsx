@@ -52,15 +52,14 @@ describe('Board component', () => {
       expect(rr.queryByRole('highlight')).toBeNull()
     })
 
-    it('append selected class when clicked on piece with right color', () => {
+    it('proclaimed as hero when clicked on piece with right color', () => {
       act(() => {
         fireEvent.click(rr.getByRole('c3'))
       })
-      const selector = rr.queryByRole('highlight')
-      expect(selector).not.toBeNull()
+      const hero = rr.getByRole('highlight').parentElement as HTMLElement
       const {x, y} = centerOf(c3)
-      expect(selector).toHaveAttribute('cx', x.toString())
-      expect(selector).toHaveAttribute('cy', y.toString())
+      const style = window.getComputedStyle(hero)
+      expect(style.transform).toBe(`translate(${x}px,${y}px)`)
     })
   })
 
@@ -73,10 +72,10 @@ describe('Board component', () => {
       act(() => {
         fireEvent.click(rr.getByRole('e3')) // select another
       })
-      const selector = rr.queryByRole('highlight')
+      const hero = rr.getByRole('highlight').parentElement as HTMLElement
       const {x, y} = centerOf(e3)
-      expect(selector).toHaveAttribute('cx', x.toString())
-      expect(selector).toHaveAttribute('cy', y.toString())
+      const style = window.getComputedStyle(hero)
+      expect(style.transform).toBe(`translate(${x}px,${y}px)`)
     })
 
     it('do not change selection when clicked on piece with another color', () => {
@@ -87,10 +86,10 @@ describe('Board component', () => {
       act(() => {
         fireEvent.click(rr.getByRole('b6')) // ignore
       })
-      const selector = rr.queryByRole('highlight')
+      const hero = rr.getByRole('highlight').parentElement as HTMLElement
       const {x, y} = centerOf(c3)
-      expect(selector).toHaveAttribute('cx', x.toString())
-      expect(selector).toHaveAttribute('cy', y.toString())
+      const style = window.getComputedStyle(hero)
+      expect(style.transform).toBe(`translate(${x}px,${y}px)`)
     })
 
     it('do not change selection when move to clicked square is illegal', () => {
@@ -101,10 +100,10 @@ describe('Board component', () => {
       act(() => {
         fireEvent.click(rr.getByRole('c5')) // ignore
       })
-      const selector = rr.queryByRole('highlight')
+      const hero = rr.getByRole('highlight').parentElement as HTMLElement
       const {x, y} = centerOf(c3)
-      expect(selector).toHaveAttribute('cx', x.toString())
-      expect(selector).toHaveAttribute('cy', y.toString())
+      const style = window.getComputedStyle(hero)
+      expect(style.transform).toBe(`translate(${x}px,${y}px)`)
     })
 
     it('make move and clear selection when move to clicked square is legal', () => {
@@ -117,9 +116,9 @@ describe('Board component', () => {
       })
       expect(rr.queryByRole('highlight')).toBeNull()
       const piece = rr.getByTestId('piece13')
+      const style = window.getComputedStyle(piece)
       const {x, y} = centerOf(d4)
-      expect(piece).toHaveAttribute('x', x.toString())
-      expect(piece).toHaveAttribute('y', y.toString())
+      expect(style.transform).toBe(`translate(${x}px,${y}px)`)
     })
 
     describe('callback "onMoveCompleted" invoked with correct notation', () => {
@@ -131,6 +130,7 @@ describe('Board component', () => {
         })
         act(() => {
           fireEvent.click(rr.getByRole('d4')) // make move
+          jest.runAllTimers()
         })
         expect(onCompleted).toBeCalledWith('c3-d4')
       })
@@ -143,6 +143,7 @@ describe('Board component', () => {
         })
         act(() => {
           fireEvent.click(rr.getByRole('e5')) // make move
+          jest.runAllTimers()
         })
         expect(onCompleted).toBeCalledWith('c3:e5')
       })
@@ -155,9 +156,11 @@ describe('Board component', () => {
         })
         act(() => {
           fireEvent.click(rr.getByRole('e5')) // make move
+          jest.runAllTimers()
         })
         act(() => {
           fireEvent.click(rr.getByRole('g7')) // make move
+          jest.runAllTimers()
         })
         expect(onCompleted).toBeCalledWith('c3:e5:g7')
       })
@@ -170,6 +173,7 @@ describe('Board component', () => {
         })
         act(() => {
           fireEvent.click(rr.getByRole('g7')) // make move
+          jest.runAllTimers()
         })
         expect(rr.queryByTestId('piece1')).toBeNull()
       })
@@ -181,11 +185,12 @@ describe('Board component', () => {
         })
         act(() => {
           fireEvent.click(rr.getByRole('e5')) // make move
+          jest.runAllTimers()
         })
-        const selector = rr.queryByRole('highlight')
+        const hero = rr.getByRole('highlight').parentElement as HTMLElement
         const {x, y} = centerOf(e5)
-        expect(selector).toHaveAttribute('cx', x.toString())
-        expect(selector).toHaveAttribute('cy', y.toString())
+        const style = window.getComputedStyle(hero)
+        expect(style.transform).toBe(`translate(${x}px,${y}px)`)
       })
 
       it('clears selection if capture continuation finished', () => {
@@ -232,23 +237,23 @@ describe('Board component', () => {
         it('properly changes position when passed single move', () => {
           const rr = render(<Board moves={['e3-d4']} />)
           act(runAllTimers)
-          const piece = rr.queryByTestId('piece14')
+          const piece = rr.getByTestId('piece14')
           const {x, y} = centerOf(d4)
-          expect(piece).toHaveAttribute('x', x.toString())
-          expect(piece).toHaveAttribute('y', y.toString())
+          const style = window.getComputedStyle(piece)
+          expect(style.transform).toBe(`translate(${x}px,${y}px)`)
         })
 
         it('properly changes position when passed two moves', () => {
           const rr = render(<Board moves={['e3-d4', 'd6-e5']} />)
           act(runAllTimers)
-          const piece9 = rr.queryByTestId('piece9')
-          const piece14 = rr.queryByTestId('piece14')
-          const pos9 = centerOf(e5)
-          const pos14 = centerOf(d4)
-          expect(piece9).toHaveAttribute('x', pos9.x.toString())
-          expect(piece9).toHaveAttribute('y', pos9.y.toString())
-          expect(piece14).toHaveAttribute('x', pos14.x.toString())
-          expect(piece14).toHaveAttribute('y', pos14.y.toString())
+          const piece9 = rr.getByTestId('piece9')
+          const piece14 = rr.getByTestId('piece14')
+          const {x: x9, y: y9} = centerOf(e5)
+          const {x: x14, y: y14} = centerOf(d4)
+          const style9 = window.getComputedStyle(piece9)
+          expect(style9.transform).toBe(`translate(${x9}px,${y9}px)`)
+          const style14 = window.getComputedStyle(piece14)
+          expect(style14.transform).toBe(`translate(${x14}px,${y14}px)`)
         })
 
         it('moves with capture change material balance', () => {
@@ -287,6 +292,7 @@ describe('Board component', () => {
 
         it('roll back to initial position on all moves removal', () => {
           const rr = render(<Board moves={[]} />)
+          act(runAllTimers)
           const before = prettyDOM(rr.container.firstChild as Element, 100000)
           rr.rerender(<Board moves={['c3-d4', 'f6-e5', 'd4:f6', 'g7:e5']} />)
           act(runAllTimers)
@@ -310,6 +316,7 @@ describe('Board component', () => {
 
         it('roll back from state with selected piece', () => {
           const rr = render(<Board moves={[]} />)
+          act(runAllTimers)
           const before = prettyDOM(rr.container.firstChild as Element, 100000)
           rr.rerender(<Board moves={['c3-d4', 'f6-e5', 'd4:f6', 'g7:e5']} />)
           act(() => {
@@ -327,14 +334,15 @@ describe('Board component', () => {
         it('properly changes position when passed single move', () => {
           const rr = render(<Board position='c3, b6' moves={['c3-d4']} />)
           act(runAllTimers)
-          const piece = rr.queryByTestId('piece0')
+          const piece = rr.getByTestId('piece0')
           const {x, y} = centerOf(d4)
-          expect(piece).toHaveAttribute('x', x.toString())
-          expect(piece).toHaveAttribute('y', y.toString())
+          const style = window.getComputedStyle(piece)
+          expect(style.transform).toBe(`translate(${x}px,${y}px)`)
         })
 
         it('roll back to specified position on all moves removal', () => {
           const rr = render(<Board position='c3, b6' moves={[]} />)
+          act(runAllTimers)
           const before = prettyDOM(rr.container.firstChild as Element, 100000)
           rr.rerender(<Board position='c3, b6' moves={['c3-d4', 'b6-e5', 'd4:f6']} />)
           act(runAllTimers)
