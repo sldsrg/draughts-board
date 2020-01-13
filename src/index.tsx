@@ -137,10 +137,13 @@ export function Board(props: Props) {
           history.current[moveNumber.current].steps.push({board: [...board], pieces: [...pieces]})
           // update position according to move
           actions.forEach(action => dispatch(action))
-          if (actions.some(a => a.type === 'remove'))
-            dispatch({type: 'chop', square: target})
-          else
-            dispatch({type: 'hoop', square: target})
+          if (actions.some(a => a.type === 'remove')) {
+            setTimeout(() => dispatch({type: 'chop', square: target}), 1000)
+            // dispatch({type: 'chop', square: target})
+          } else {
+            setTimeout(() => dispatch({type: 'hoop', square: target}), 1000)
+            // dispatch({type: 'hoop', square: target})
+          }
         }
       }
     } else { // select piece
@@ -167,10 +170,10 @@ export function Board(props: Props) {
       >
         <Definitions />
         <Scene onClick={i => squareClicked(i)} />
-        <Actors hero={hero} onClick={i => pieceClicked(i)}
+        <Actors onClick={i => pieceClicked(i)}
+          board={board}
           pieces={pieces}
-          // selection={selection}
-          board={board} />
+          hero={hero} />
       </svg>
     </div >
   )

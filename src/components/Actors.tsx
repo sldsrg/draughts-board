@@ -26,22 +26,43 @@ const useStyles = createUseStyles({
 interface ActorsProps {
   board: Array<number | null>,
   pieces: string[],
-  // selection: number | undefined,
   hero: number | null,
-  onClick: (i: number) => void
+  onClick: (id: number) => void
 }
 
 export function Actors(props: ActorsProps) {
   const {board, pieces, hero, onClick} = props
   const classes = useStyles()
 
-  const res = pieces
-    .map((code, i) => {
-      if (code === '') return
-      const square = board.indexOf(i)
-      return (
+  return <TransitionGroup component={null}>
+    {[
+      ...pieces
+        .map((code, index) => ({code, id: index}))
+        .filter(({code, id}) => code !== '' && id !== hero)
+        .map(({code, id}) => (
+          <CSSTransition
+            key={`glyph${id}`}
+            timeout={1000}
+            classNames={{
+              enter: classes.transitionEnter,
+              enterActive: classes.transitionEnterActive,
+              exit: classes.transitionExit,
+              exitActive: classes.transitionExitActive
+            }}>
+
+            <Glyph
+              id={id}
+              code={code}
+              square={board.indexOf(id)}
+              selected={false}
+              onClick={() => onClick(id)}
+            />
+          </CSSTransition>
+        )),
+
+      hero !== null && (
         <CSSTransition
-          key={`glyph${i}`}
+          key={`glyph${hero}`}
           timeout={1000}
           classNames={{
             enter: classes.transitionEnter,
@@ -51,23 +72,14 @@ export function Actors(props: ActorsProps) {
           }}>
 
           <Glyph
-            id={i}
-            code={code}
-            square={square}
-            selected={i === hero}
-            onClick={() => onClick(i)}
+            id={hero}
+            code={pieces[hero]}
+            square={board.indexOf(hero)}
+            selected={true}
+            onClick={() => onClick(hero)}
           />
         </CSSTransition>
       )
-    })
-
-  if (hero) {
-    return <TransitionGroup component={null}>
-      {[...res.slice(0, hero), ...res.slice(hero + 1), res[hero]]}
-    </TransitionGroup>
-  } else {
-    return <TransitionGroup component={null}>
-      {[...res]}
-    </TransitionGroup>
-  }
+    ]}
+  </TransitionGroup>
 }

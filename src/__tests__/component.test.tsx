@@ -113,6 +113,7 @@ describe('Board component', () => {
       })
       act(() => {
         fireEvent.click(rr.getByRole('d4')) // make move
+        jest.runAllTimers()
       })
       expect(rr.queryByRole('highlight')).toBeNull()
       const piece = rr.getByTestId('piece13')
@@ -200,10 +201,12 @@ describe('Board component', () => {
         })
         act(() => {
           fireEvent.click(rr.getByRole('e3')) // first capture
+          jest.runAllTimers()
         })
         expect(rr.queryByRole('highlight')).toBeDefined()
         act(() => {
           fireEvent.click(rr.getByRole('g5')) // last capture
+          jest.runAllTimers()
         })
         expect(rr.queryByRole('highlight')).toBeNull()
       })
@@ -215,6 +218,7 @@ describe('Board component', () => {
         })
         act(() => {
           fireEvent.click(rr.getByRole('d8')) // make move
+          jest.runAllTimers()
         })
         expect(rr.queryByTestId('piece0')).toHaveAttribute('role', 'white-king')
       })
@@ -226,6 +230,7 @@ describe('Board component', () => {
         })
         act(() => {
           fireEvent.click(rr.getByRole('e1')) // make move
+          jest.runAllTimers()
         })
         expect(rr.queryByTestId('piece1')).toHaveAttribute('role', 'black-king')
       })
