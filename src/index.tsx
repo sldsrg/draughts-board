@@ -49,9 +49,7 @@ export function Board(props: Props) {
           parseMove(board, pieces,
             Field.parse(job.data.substr(0, 2)),
             Field.parse(job.data.substr(3, 2))
-          )?.map(x => {
-            dispatch(x)
-          })
+          )?.map(x => dispatch(x))
           record.notation = (record.notation?.length)
             ? `${record.notation}${job.data.slice(2)}`
             : job.data
@@ -68,7 +66,7 @@ export function Board(props: Props) {
           break
       }
       setJob(undefined)
-    }, [job, board, pieces])
+    }, [job, board, pieces, whitesTurn])
 
   useEffect(() => {
     if (initialPosition) {
@@ -139,17 +137,10 @@ export function Board(props: Props) {
           history.current[moveNumber.current].steps.push({board: [...board], pieces: [...pieces]})
           // update position according to move
           actions.forEach(action => dispatch(action))
-          if ( // check on man-to-king promotion
-            'Mm'.includes(pieces[hero]) &&
-            (whitesTurn && target < 8 || !whitesTurn && target > 54)
-          ) {
-            dispatch({type: 'convert', at: target})
-          }
           if (actions.some(a => a.type === 'remove'))
             dispatch({type: 'chop', square: target})
           else
             dispatch({type: 'hoop', square: target})
-          // setSelection(target)
         }
       }
     } else { // select piece
@@ -158,7 +149,6 @@ export function Board(props: Props) {
           history.current[moveNumber.current] = {notation: '', steps: []}
           dispatch({type: 'select', square: target})
           setHero(board[target])
-          // setSelection(target)
         }
       }
     }

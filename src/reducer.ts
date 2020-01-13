@@ -21,7 +21,7 @@ export type Action =
   } |
   {type: 'move', from: number, to: number} |
   {type: 'remove', from: number} |
-  {type: 'convert', at: number} |
+  // {type: 'convert', at: number} |
   // interaction related actions
   {type: 'select', square: number} |
   {type: 'hoop', square: number} |
@@ -42,19 +42,25 @@ export function reducer(state: State, action: Action): State {
       ({board, pieces} = action.with)
       break
     case 'move':
-      board[action.to] = board[action.from]
-      board[action.from] = null
+      {
+        board[action.to] = board[action.from]
+        board[action.from] = null
+        // check on man-to-king promotion
+        const id = board[action.to] as number
+        if (pieces[id] === 'M' && action.to < 8) pieces[id] = 'K'
+        if (pieces[id] === 'm' && action.to > 54) pieces[id] = 'k'
+      }
       break
     case 'remove':
       pieces[board[action.from] as number] = ''
       board[action.from] = null
       break
-    case 'convert':
-      {
-        const id = board[action.at] as number
-        pieces[id] = 'KkMm'.substr('MmKk'.indexOf(pieces[id]), 1)
-      }
-      break
+    // case 'convert':
+    //   {
+    //     const id = board[action.at] as number
+    //     pieces[id] = 'KkMm'.substr('MmKk'.indexOf(pieces[id]), 1)
+    //   }
+    //   break
     case 'select':
       stage = 'initiation'
       notation = Field.fromIndex(action.square).toString()

@@ -1,5 +1,5 @@
 import {reducer, State, INITIAL_STATE} from '../reducer'
-import {c3, d4, a7, g1, b8, e1, c7, a1, c1} from './utils/namedSquares'
+import {c3, d4, e1, c7, a1, c1} from './utils/namedSquares'
 import {newGame, setUp} from '../tools'
 
 describe('reducer', () => {
@@ -21,20 +21,6 @@ describe('reducer', () => {
       const res = reducer(state, {type: 'remove', from: c3})
       expect(res.board[c3]).toBeNull()
       expect(res.pieces[key]).toBe('')
-    })
-  })
-
-  describe('action "promote"', () => {
-    it('converts piece to king if one is man', () => {
-      const state = {...INITIAL_STATE, ...setUp('b8, d6')}
-      const res = reducer(state, {type: 'convert', at: b8})
-      expect(res.pieces[0]).toBe('K')
-    })
-
-    it('converts piece to man if one is king', () => {
-      const state = {...INITIAL_STATE, ...setUp('king b8, d6')}
-      const res = reducer(state, {type: 'convert', at: b8})
-      expect(res.pieces[0]).toBe('M')
     })
   })
 

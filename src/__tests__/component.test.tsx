@@ -363,6 +363,20 @@ describe('Board component', () => {
           const after = prettyDOM(rr.container.firstChild as Element, 100000)
           expect(after).toBe(before)
         })
+
+        it('promotes white man to king on topmost square', () => {
+          const rr = render(<Board position='c7, f4' moves={['c7-d8']} />)
+          act(runAllTimers)
+          const subject = rr.queryByRole('white-king')
+          expect(subject).not.toBeNull()
+        })
+
+        it('promotes black man to king on lowest square', () => {
+          const rr = render(<Board position='c5, f2 blacks turn' moves={['f2-e1']} />)
+          act(runAllTimers)
+          const subject = rr.queryByRole('black-king')
+          expect(subject).not.toBeNull()
+        })
       })
     })
   })
