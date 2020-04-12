@@ -1,5 +1,5 @@
 import React from 'react'
-import {BOARD_SIZE, FIELD_SIZE, MARGIN} from '../constants'
+import { BOARD_SIZE, FIELD_SIZE, MARGIN } from '../constants'
 
 interface SceneProps {
   onClick: (i: number) => void

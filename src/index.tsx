@@ -1,12 +1,12 @@
-import React, {useReducer, useEffect, useRef, useState} from 'react'
-import {BOARD_SIZE, MARGIN} from './constants'
-import {reducer, INITIAL_STATE} from './reducer'
-import {Definitions} from './components/Definitions'
-import {Scene} from './components/Scene'
-import {Actors} from './components/Actors'
-import {parseMove, setUp, newGame} from './tools'
-import {Field} from './field'
-import {Job, moveToJobs, StepRecord} from './job'
+import React, { useReducer, useEffect, useRef, useState } from 'react'
+import { BOARD_SIZE, MARGIN } from './constants'
+import { reducer, INITIAL_STATE } from './reducer'
+import { Definitions } from './components/Definitions'
+import { Scene } from './components/Scene'
+import { Actors } from './components/Actors'
+import { parseMove, setUp, newGame } from './tools'
+import { Field } from './field'
+import { Job, moveToJobs, StepRecord } from './job'
 
 type MoveCallback = (notation: string) => void
 
@@ -18,14 +18,14 @@ interface Props {
 }
 
 export function Board(props: Props) {
-  const {background, position: initialPosition, moves, onMoveCompleted} = props
-  const [{board, pieces, stage, notation}, dispatch] = useReducer(reducer, INITIAL_STATE)
+  const { background, position: initialPosition, moves, onMoveCompleted } = props
+  const [{ board, pieces, stage, notation }, dispatch] = useReducer(reducer, INITIAL_STATE)
   const [hero, setHero] = useState<number | null>(null)
   const [whitesTurn, setWhitesTurn] = useState(true)
   const [queue, setQueue] = useState<Array<Job>>([])
   const [job, setJob] = useState<Job>()
-  const history = useRef<Array<{notation: string, steps: StepRecord[]}>>([
-    {notation: '', steps: []}
+  const history = useRef<Array<{ notation: string, steps: StepRecord[] }>>([
+    { notation: '', steps: [] }
   ])
   const moveNumber = useRef(0)
 
@@ -53,15 +53,15 @@ export function Board(props: Props) {
           record.notation = (record.notation?.length)
             ? `${record.notation}${job.data.slice(2)}`
             : job.data
-          record.steps.push({board: [...board], pieces: [...pieces]})
+          record.steps.push({ board: [...board], pieces: [...pieces] })
           break
         case 'undo':
-          dispatch({type: 'restore', with: job.snapshot})
+          dispatch({ type: 'restore', with: job.snapshot })
           break
         case 'turn':
           setHero(null)
           moveNumber.current += job.forwards ? 1 : -1
-          history.current[moveNumber.current] = {notation: '', steps: []}
+          history.current[moveNumber.current] = { notation: '', steps: [] }
           setWhitesTurn(turn => !turn)
           break
       }
@@ -70,12 +70,12 @@ export function Board(props: Props) {
 
   useEffect(() => {
     if (initialPosition) {
-      const {whitesTurn, board, pieces} = setUp(initialPosition)
+      const { whitesTurn, board, pieces } = setUp(initialPosition)
       setWhitesTurn(whitesTurn)
-      dispatch({type: 'restore', with: {board, pieces}})
+      dispatch({ type: 'restore', with: { board, pieces } })
     } else {
       setWhitesTurn(true)
-      dispatch({type: 'restore', with: newGame()})
+      dispatch({ type: 'restore', with: newGame() })
     }
   }, [initialPosition])
 
@@ -84,7 +84,7 @@ export function Board(props: Props) {
       if (onMoveCompleted) {
         onMoveCompleted(notation)
       }
-      dispatch({type: 'reset'})
+      dispatch({ type: 'reset' })
       history.current[moveNumber.current].notation = notation
       moveNumber.current++
       setHero(null)
@@ -106,12 +106,12 @@ export function Board(props: Props) {
       setQueue(q => [...q,
       ...history.current.slice(moves.length, moveNumber.current)
         .reverse()
-        .flatMap(({notation, steps}) => [
-          {type: 'proclaim', hero: notation.slice(notation.length - 2), delay: 50} as Job,
+        .flatMap(({ notation, steps }) => [
+          { type: 'proclaim', hero: notation.slice(notation.length - 2), delay: 50 } as Job,
           ...steps.reverse().map(step => (
-            {type: 'undo', snapshot: step, delay: 500} as Job)
+            { type: 'undo', snapshot: step, delay: 500 } as Job)
           ),
-          {type: 'turn', forwards: false, delay: 0} as Job
+          { type: 'turn', forwards: false, delay: 0 } as Job
         ])
       ])
     }
@@ -127,21 +127,21 @@ export function Board(props: Props) {
     if (hero !== null) {
       if (pieceIndex !== null) { // keep or move selection
         if (whitesTurn === 'MK'.includes(pieces[pieceIndex])) {
-          dispatch({type: 'select', square: target})
+          dispatch({ type: 'select', square: target })
           setHero(pieceIndex)
         }
       } else {
         const actions = parseMove(board, pieces, board.indexOf(hero), target)
         if (actions !== null) {
           // save previous position
-          history.current[moveNumber.current].steps.push({board: [...board], pieces: [...pieces]})
+          history.current[moveNumber.current].steps.push({ board: [...board], pieces: [...pieces] })
           // update position according to move
           actions.forEach(action => dispatch(action))
           if (actions.some(a => a.type === 'remove')) {
-            setTimeout(() => dispatch({type: 'chop', square: target}), 1000)
+            setTimeout(() => dispatch({ type: 'chop', square: target }), 1000)
             // dispatch({type: 'chop', square: target})
           } else {
-            setTimeout(() => dispatch({type: 'hoop', square: target}), 1000)
+            setTimeout(() => dispatch({ type: 'hoop', square: target }), 1000)
             // dispatch({type: 'hoop', square: target})
           }
         }
@@ -149,8 +149,8 @@ export function Board(props: Props) {
     } else { // select piece
       if (pieceIndex !== null) {
         if (whitesTurn === 'MK'.includes(pieces[pieceIndex])) {
-          history.current[moveNumber.current] = {notation: '', steps: []}
-          dispatch({type: 'select', square: target})
+          history.current[moveNumber.current] = { notation: '', steps: [] }
+          dispatch({ type: 'select', square: target })
           setHero(board[target])
         }
       }

@@ -1,10 +1,10 @@
 import '@testing-library/jest-dom/extend-expect'
 import React from 'react'
-import {act} from 'react-dom/test-utils'
-import {render, fireEvent, cleanup, RenderResult, prettyDOM} from '@testing-library/react'
+import { act } from 'react-dom/test-utils'
+import { render, fireEvent, cleanup, RenderResult, prettyDOM } from '@testing-library/react'
 
-import {Board} from '../index'
-import {centerOf, c3, e3, d4, e5} from './utils/namedSquares'
+import { Board } from '../index'
+import { centerOf, c3, e3, d4, e5 } from './utils/namedSquares'
 
 jest.useFakeTimers()
 afterEach(cleanup)
@@ -57,7 +57,7 @@ describe('Board component', () => {
         fireEvent.click(rr.getByRole('c3'))
       })
       const hero = rr.getByRole('highlight').parentElement as HTMLElement
-      const {x, y} = centerOf(c3)
+      const { x, y } = centerOf(c3)
       const style = window.getComputedStyle(hero)
       expect(style.transform).toBe(`translate(${x}px,${y}px)`)
     })
@@ -73,7 +73,7 @@ describe('Board component', () => {
         fireEvent.click(rr.getByRole('e3')) // select another
       })
       const hero = rr.getByRole('highlight').parentElement as HTMLElement
-      const {x, y} = centerOf(e3)
+      const { x, y } = centerOf(e3)
       const style = window.getComputedStyle(hero)
       expect(style.transform).toBe(`translate(${x}px,${y}px)`)
     })
@@ -87,7 +87,7 @@ describe('Board component', () => {
         fireEvent.click(rr.getByRole('b6')) // ignore
       })
       const hero = rr.getByRole('highlight').parentElement as HTMLElement
-      const {x, y} = centerOf(c3)
+      const { x, y } = centerOf(c3)
       const style = window.getComputedStyle(hero)
       expect(style.transform).toBe(`translate(${x}px,${y}px)`)
     })
@@ -101,7 +101,7 @@ describe('Board component', () => {
         fireEvent.click(rr.getByRole('c5')) // ignore
       })
       const hero = rr.getByRole('highlight').parentElement as HTMLElement
-      const {x, y} = centerOf(c3)
+      const { x, y } = centerOf(c3)
       const style = window.getComputedStyle(hero)
       expect(style.transform).toBe(`translate(${x}px,${y}px)`)
     })
@@ -118,7 +118,7 @@ describe('Board component', () => {
       expect(rr.queryByRole('highlight')).toBeNull()
       const piece = rr.getByTestId('piece13')
       const style = window.getComputedStyle(piece)
-      const {x, y} = centerOf(d4)
+      const { x, y } = centerOf(d4)
       expect(style.transform).toBe(`translate(${x}px,${y}px)`)
     })
 
@@ -189,7 +189,7 @@ describe('Board component', () => {
           jest.runAllTimers()
         })
         const hero = rr.getByRole('highlight').parentElement as HTMLElement
-        const {x, y} = centerOf(e5)
+        const { x, y } = centerOf(e5)
         const style = window.getComputedStyle(hero)
         expect(style.transform).toBe(`translate(${x}px,${y}px)`)
       })
@@ -243,7 +243,7 @@ describe('Board component', () => {
           const rr = render(<Board moves={['e3-d4']} />)
           act(runAllTimers)
           const piece = rr.getByTestId('piece14')
-          const {x, y} = centerOf(d4)
+          const { x, y } = centerOf(d4)
           const style = window.getComputedStyle(piece)
           expect(style.transform).toBe(`translate(${x}px,${y}px)`)
         })
@@ -253,8 +253,8 @@ describe('Board component', () => {
           act(runAllTimers)
           const piece9 = rr.getByTestId('piece9')
           const piece14 = rr.getByTestId('piece14')
-          const {x: x9, y: y9} = centerOf(e5)
-          const {x: x14, y: y14} = centerOf(d4)
+          const { x: x9, y: y9 } = centerOf(e5)
+          const { x: x14, y: y14 } = centerOf(d4)
           const style9 = window.getComputedStyle(piece9)
           expect(style9.transform).toBe(`translate(${x9}px,${y9}px)`)
           const style14 = window.getComputedStyle(piece14)
@@ -340,7 +340,7 @@ describe('Board component', () => {
           const rr = render(<Board position='c3, b6' moves={['c3-d4']} />)
           act(runAllTimers)
           const piece = rr.getByTestId('piece0')
-          const {x, y} = centerOf(d4)
+          const { x, y } = centerOf(d4)
           const style = window.getComputedStyle(piece)
           expect(style.transform).toBe(`translate(${x}px,${y}px)`)
         })

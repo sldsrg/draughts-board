@@ -1,5 +1,5 @@
-import {shouldCapture} from './tools'
-import {Field} from './field'
+import { shouldCapture } from './tools'
+import { Field } from './field'
 
 export interface State {
   // position related state
@@ -19,13 +19,13 @@ export type Action =
       pieces: string[]
     }
   } |
-  {type: 'move', from: number, to: number} |
-  {type: 'remove', from: number} |
+  { type: 'move', from: number, to: number } |
+  { type: 'remove', from: number } |
   // interaction related actions
-  {type: 'select', square: number} |
-  {type: 'hoop', square: number} |
-  {type: 'chop', square: number} |
-  {type: 'reset'}
+  { type: 'select', square: number } |
+  { type: 'hoop', square: number } |
+  { type: 'chop', square: number } |
+  { type: 'reset' }
 
 export const INITIAL_STATE: State = {
   pieces: [],
@@ -35,10 +35,10 @@ export const INITIAL_STATE: State = {
 }
 
 export function reducer(state: State, action: Action): State {
-  let {board, pieces, stage, notation} = state
+  let { board, pieces, stage, notation } = state
   switch (action.type) {
     case 'restore':
-      ({board, pieces} = action.with)
+      ({ board, pieces } = action.with)
       break
     case 'move':
       {

@@ -11,7 +11,7 @@ export class Field {
     return new Field(row, column)
   }
 
-  constructor(public row: number, public column: number) {}
+  constructor(public row: number, public column: number) { }
 
   public next(rowStep: number, columnStep: number): Field {
     return new Field(this.row + rowStep, this.column + columnStep)

@@ -1,7 +1,7 @@
 import React from 'react'
-import {createUseStyles} from 'react-jss'
-import {TransitionGroup, CSSTransition} from 'react-transition-group'
-import {Glyph} from './Glyph'
+import { createUseStyles } from 'react-jss'
+import { TransitionGroup, CSSTransition } from 'react-transition-group'
+import { Glyph } from './Glyph'
 
 const useStyles = createUseStyles({
   transitionEnter: {
@@ -31,15 +31,15 @@ interface ActorsProps {
 }
 
 export function Actors(props: ActorsProps) {
-  const {board, pieces, hero, onClick} = props
+  const { board, pieces, hero, onClick } = props
   const classes = useStyles()
 
   return <TransitionGroup component={null}>
     {[
       ...pieces
-        .map((code, index) => ({code, id: index}))
-        .filter(({code, id}) => code !== '' && id !== hero)
-        .map(({code, id}) => (
+        .map((code, index) => ({ code, id: index }))
+        .filter(({ code, id }) => code !== '' && id !== hero)
+        .map(({ code, id }) => (
           <CSSTransition
             key={`glyph${id}`}
             timeout={1000}

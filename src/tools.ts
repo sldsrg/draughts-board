@@ -1,6 +1,6 @@
-import {State, Action} from './reducer'
-import {Vector} from './vector'
-import {Field} from './field'
+import { State, Action } from './reducer'
+import { Vector } from './vector'
+import { Field } from './field'
 
 export function newGame(): {
   board: Array<number | null>,
@@ -15,7 +15,7 @@ export function newGame(): {
     if (row % 2 !== column % 2 && row !== 3 && row !== 4) return key++
     return v
   })
-  return {board, pieces, whitesTurn: true}
+  return { board, pieces, whitesTurn: true }
 }
 
 export function setUp(s: string): {
@@ -53,7 +53,7 @@ export function setUp(s: string): {
     })
   }
   const whitesTurn = !res[5]
-  return {board, pieces, whitesTurn}
+  return { board, pieces, whitesTurn }
 }
 
 export function snapshot(
@@ -112,7 +112,7 @@ export function parseMove(
       const trough = board[next]
       if (trough === null) return null
       if (isWhite === 'MK'.includes(pieces[trough])) return null
-      actions.push({type: 'remove', from: next})
+      actions.push({ type: 'remove', from: next })
     }
   } else { // it’s a king’s move
     // scanning path
@@ -124,7 +124,7 @@ export function parseMove(
       if ('MK'.includes(code) === isWhite) return null
       if (!quiet) return null
       quiet = false
-      actions.push({type: 'remove', from: sq})
+      actions.push({ type: 'remove', from: sq })
     }
   }
 
@@ -138,7 +138,7 @@ export function parseMove(
     })
     if (captureCapable.length > 0) return null
   }
-  actions.unshift({type: 'move', from, to})
+  actions.unshift({ type: 'move', from, to })
   return actions
 }
 
