@@ -1,8 +1,8 @@
 import React from 'react'
-import { createUseStyles } from 'react-jss'
+import jss from 'jss'
 import { FIELD_SIZE } from '../constants'
 
-const useStyles = createUseStyles({
+const styles = {
   whitePiece: {
     fill: 'white',
     stroke: 'darkGray',
@@ -15,7 +15,7 @@ const useStyles = createUseStyles({
     strokeWidth: 2,
     transition: 'all 700ms'
   }
-})
+}
 
 interface GlyphProps {
   id: number,
@@ -27,7 +27,7 @@ interface GlyphProps {
 
 export function Glyph(props: GlyphProps) {
   const { id, code, square, selected, onClick } = props
-  const classes = useStyles()
+  const { classes } = jss.createStyleSheet(styles).attach()
   const row = square >> 3
   const column = square - (row << 3)
   const x = column * FIELD_SIZE + (FIELD_SIZE >> 1)

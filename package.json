@@ -1,6 +1,6 @@
 {
   "name": "draughts-board",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "React component for interactive representation of draughts game",
   "main": "dist/index.js",
   "module": "lib/index.js",
@@ -37,7 +37,7 @@
     "jest": "^24.9.0",
     "react": "^16.10.1",
     "react-dom": "^16.10.1",
-    "react-jss": "^10.0.0",
+    "jss": "^10.3.0",
     "react-transition-group": "^4.3.0",
     "rollup": "^1.25.0",
     "rollup-plugin-typescript2": "^0.24.3",
@@ -48,7 +48,7 @@
   "peerDependencies": {
     "react": "^16.10.1",
     "react-dom": "^16.10.1",
-    "react-jss": "^10.0.0",
+    "jss": "^10.3.0",
     "react-transition-group": "^4.3.0"
   },
   "files": [

@@ -1,9 +1,9 @@
 import React from 'react'
-import { createUseStyles } from 'react-jss'
+import jss from 'jss'
 import { TransitionGroup, CSSTransition } from 'react-transition-group'
 import { Glyph } from './Glyph'
 
-const useStyles = createUseStyles({
+const styles = {
   transitionEnter: {
     opacity: 0.1
   },
@@ -21,7 +21,7 @@ const useStyles = createUseStyles({
     opacity: 0.1,
     transition: 'opacity .7s ease-in .3s'
   },
-})
+}
 
 interface ActorsProps {
   board: Array<number | null>,
@@ -32,7 +32,7 @@ interface ActorsProps {
 
 export function Actors(props: ActorsProps) {
   const { board, pieces, hero, onClick } = props
-  const classes = useStyles()
+  const { classes } = jss.createStyleSheet(styles).attach()
 
   return <TransitionGroup component={null}>
     {[

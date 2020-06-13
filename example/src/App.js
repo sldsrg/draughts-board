@@ -1,10 +1,10 @@
 import React, { useState } from 'react'
-import { createUseStyles } from 'react-jss'
+import { makeStyles } from '@material-ui/styles'
 import { CssBaseline, Button, Grid } from '@material-ui/core'
 import { Board } from 'draughts-board'
 import wood from './assets/wood.jpg'
 
-const useStyles = createUseStyles({
+const useStyles = makeStyles({
   root: {
     padding: '1em'
   }
