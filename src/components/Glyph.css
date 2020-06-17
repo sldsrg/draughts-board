@@ -1,0 +1,13 @@
+.whitePiece {
+  fill: white;
+  stroke: darkGray;
+  stroke-width: 2;
+  transition: all 700ms;
+}
+
+.blackPiece {
+  fill: black;
+  stroke: lightGray;
+  stroke-width: 2;
+  transition: all 700ms;
+}

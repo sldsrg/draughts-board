@@ -1,21 +1,7 @@
 import React from 'react'
-import jss from 'jss'
 import { FIELD_SIZE } from '../constants'
 
-const styles = {
-  whitePiece: {
-    fill: 'white',
-    stroke: 'darkGray',
-    strokeWidth: 2,
-    transition: 'all 700ms'
-  },
-  blackPiece: {
-    fill: 'black',
-    stroke: 'lightGray',
-    strokeWidth: 2,
-    transition: 'all 700ms'
-  }
-}
+import css from './Glyph.css'
 
 interface GlyphProps {
   id: number,
@@ -27,7 +13,7 @@ interface GlyphProps {
 
 export function Glyph(props: GlyphProps) {
   const { id, code, square, selected, onClick } = props
-  const { classes } = jss.createStyleSheet(styles).attach()
+
   const row = square >> 3
   const column = square - (row << 3)
   const x = column * FIELD_SIZE + (FIELD_SIZE >> 1)
@@ -37,7 +23,7 @@ export function Glyph(props: GlyphProps) {
 
   return (
     <g
-      className={isWhite ? classes.whitePiece : classes.blackPiece}
+      className={isWhite ? css.whitePiece : css.blackPiece}
       style={{ transform: `translate(${x}px,${y}px)` }}
       data-testid={`piece${id}`}
       role={`${isWhite ? 'white' : 'black'}-${isKing ? 'king' : 'man'}`}

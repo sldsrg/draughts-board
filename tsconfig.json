@@ -8,14 +8,13 @@
     "moduleResolution": "node",
     "noImplicitAny": true,
     "strictNullChecks": true,
-    "target": "es6",
+    "target": "ES2015",
     "lib": [
-      "dom",
-      "dom.iterable",
-      "esnext"
+      "DOM",
+      "DOM.Iterable",
+      "ESNext"
     ],
-    "skipLibCheck": true,
-    "module": "esnext",
+    "module": "ES2015",
     "outDir": "./lib"
   },
   "typedocOptions": {
