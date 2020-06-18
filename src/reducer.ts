@@ -35,55 +35,94 @@ export const INITIAL_STATE: State = {
 }
 
 export function reducer(state: State, action: Action): State {
-  let { board, pieces, stage, notation } = state
+  const { board, pieces, stage, notation } = state
   switch (action.type) {
     case 'restore':
-      ({ board, pieces } = action.with)
-      break
-    case 'move':
-      {
-        board[action.to] = board[action.from]
-        board[action.from] = null
-        // check on man-to-king promotion
-        const id = board[action.to] as number
-        if (pieces[id] === 'M' && action.to < 8) pieces[id] = 'K'
-        if (pieces[id] === 'm' && action.to > 54) pieces[id] = 'k'
+      return {
+        board: [...action.with.board],
+        pieces: [...action.with.pieces],
+        stage,
+        notation
       }
-      break
-    case 'remove':
-      pieces[board[action.from] as number] = ''
-      board[action.from] = null
-      break
+    case 'move': {
+      const nextBoard = [
+        ...board.slice(0, action.to),
+        board[action.from],
+        ...board.slice(action.to + 1)
+      ]
+      nextBoard[action.from] = null
+      // check on man-to-king promotion
+      const id = nextBoard[action.to] as number
+      if (pieces[id] === 'M' && action.to < 8) {
+        const nextPieces = [
+          ...pieces.slice(0, id),
+          'K',
+          ...pieces.slice(id + 1)
+        ]
+        return { board: nextBoard, pieces: nextPieces, stage, notation }
+      }
+      if (pieces[id] === 'm' && action.to > 54) {
+        const nextPieces = [
+          ...pieces.slice(0, id),
+          'k',
+          ...pieces.slice(id + 1)
+        ]
+        return { board: nextBoard, pieces: nextPieces, stage, notation }
+      }
+      return { board: nextBoard, pieces, stage, notation }
+    }
+    case 'remove': {
+      const id = board[action.from] as number
+      return {
+        board: [
+          ...board.slice(0, action.from),
+          null,
+          ...board.slice(action.from + 1)
+        ],
+        pieces: [
+          ...pieces.slice(0, id),
+          '',
+          ...pieces.slice(id + 1)
+        ],
+        stage,
+        notation
+      }
+    }
     case 'select':
-      stage = 'initiation'
-      notation = Field.fromIndex(action.square).toString()
-      break
+      return {
+        board,
+        pieces,
+        stage: 'initiation',
+        notation: Field.fromIndex(action.square).toString()
+      }
     case 'hoop':
       if (state.stage === 'initiation') {
-        const target = Field.fromIndex(action.square).toString()
-        stage = 'pending'
-        notation = `${state.notation}-${target}`
+        return {
+          board,
+          pieces,
+          stage: 'pending',
+          notation: `${notation}-${Field.fromIndex(action.square).toString()}`
+        }
       } else {
         throw new Error('Illegal state on action "hoop"')
       }
-      break
     case 'chop':
       if (['initiation', 'capture'].includes(state.stage)) {
-        const target = Field.fromIndex(action.square).toString()
-        notation = `${state.notation}:${target}`
-        stage = shouldCapture(board, pieces, action.square) ? 'capture' : 'pending'
+        return {
+          board,
+          pieces,
+          stage: shouldCapture(board, pieces, action.square) ? 'capture' : 'pending',
+          notation: `${notation}:${Field.fromIndex(action.square).toString()}`
+        }
       } else {
         throw new Error('Illegal state on action "chop"')
       }
-      break
     case 'reset':
-      stage = 'idle'
-      notation = ''
-      break
-  }
-  return {
-    board: [...board],
-    pieces: [...pieces],
-    stage, notation
+      return {
+        board,
+        pieces,
+        stage: 'idle',
+        notation: ''
+      }
   }
 }

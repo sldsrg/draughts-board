@@ -40,6 +40,7 @@
     "eslint-plugin-jest": "^23.0.4",
     "eslint-plugin-react": "^7.16.0",
     "eslint-plugin-react-hooks": "^4.0.4",
+    "identity-obj-proxy": "^3.0.0",
     "jest": "^26.0.1",
     "react": "^16.10.1",
     "react-dom": "^16.10.1",
