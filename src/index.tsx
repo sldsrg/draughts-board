@@ -4,26 +4,39 @@ import { reducer, INITIAL_STATE } from './reducer'
 import { Definitions } from './components/Definitions'
 import { Scene } from './components/Scene'
 import { Actors } from './components/Actors'
-import { parseMove, setUp, newGame } from './tools'
+import { parseMove, setUp, newGame, snapshot } from './tools'
 import { Field } from './field'
 import { Job, moveToJobs, StepRecord } from './job'
 
 type MoveCallback = (notation: string) => void
+type SetupCallback = (position: string) => void
 
 interface Props {
+  mode?: 'setup' | 'play',
   background?: string,
   position?: string,
+  onSetupCompleted?: SetupCallback,
   moves?: string[],
   onMoveCompleted?: MoveCallback
 }
 
-export function Board(props: Props) {
-  const { background, position: initialPosition, moves, onMoveCompleted } = props
+export function Board(props: Props): JSX.Element {
+  const {
+    mode = 'play',
+    background, // TODO: default background
+    position: initialPosition,
+    // for 'setup' mode
+    onSetupCompleted: onSetupPosition,
+    // for 'play' mode
+    moves,
+    onMoveCompleted
+  } = props
   const [{ board, pieces, stage, notation }, dispatch] = useReducer(reducer, INITIAL_STATE)
   const [hero, setHero] = useState<number | null>(null)
   const [whitesTurn, setWhitesTurn] = useState(true)
   const [queue, setQueue] = useState<Array<Job>>([])
   const [job, setJob] = useState<Job>()
+  const [inventory, setInventory] = useState<'m' | 'k' | 'M' | 'K'>('M')
   const history = useRef<Array<{ notation: string, steps: StepRecord[] }>>([
     { notation: '', steps: [] }
   ])
@@ -123,39 +136,48 @@ export function Board(props: Props) {
   }
 
   const squareClicked = (target: number) => {
-    const pieceIndex = board[target]
-    if (hero !== null) {
-      if (pieceIndex !== null) { // keep or move selection
-        if (whitesTurn === 'MK'.includes(pieces[pieceIndex])) {
-          dispatch({ type: 'select', square: target })
-          setHero(pieceIndex)
+    if (mode === 'play') {
+      const pieceIndex = board[target]
+      if (hero !== null) {
+        if (pieceIndex !== null) { // keep or move selection
+          if (whitesTurn === 'MK'.includes(pieces[pieceIndex])) {
+            dispatch({ type: 'select', square: target })
+            setHero(pieceIndex)
+          }
+        } else {
+          const actions = parseMove(board, pieces, board.indexOf(hero), target)
+          if (actions !== null) {
+            // save previous position
+            history.current[moveNumber.current].steps.push({
+              board: [...board],
+              pieces: [...pieces]
+            })
+            // update position according to move
+            actions.forEach(action => dispatch(action))
+            if (actions.some(a => a.type === 'remove')) {
+              setTimeout(() => dispatch({ type: 'chop', square: target }), 1000)
+              // dispatch({type: 'chop', square: target})
+            } else {
+              setTimeout(() => dispatch({ type: 'hoop', square: target }), 1000)
+              // dispatch({type: 'hoop', square: target})
+            }
+          }
         }
-      } else {
-        const actions = parseMove(board, pieces, board.indexOf(hero), target)
-        if (actions !== null) {
-          // save previous position
-          history.current[moveNumber.current].steps.push({ board: [...board], pieces: [...pieces] })
-          // update position according to move
-          actions.forEach(action => dispatch(action))
-          if (actions.some(a => a.type === 'remove')) {
-            setTimeout(() => dispatch({ type: 'chop', square: target }), 1000)
-            // dispatch({type: 'chop', square: target})
-          } else {
-            setTimeout(() => dispatch({ type: 'hoop', square: target }), 1000)
-            // dispatch({type: 'hoop', square: target})
+      } else { // select piece
+        if (pieceIndex !== null) {
+          if (whitesTurn === 'MK'.includes(pieces[pieceIndex])) {
+            history.current[moveNumber.current] = { notation: '', steps: [] }
+            dispatch({ type: 'select', square: target })
+            setHero(board[target])
           }
         }
       }
-    } else { // select piece
-      if (pieceIndex !== null) {
-        if (whitesTurn === 'MK'.includes(pieces[pieceIndex])) {
-          history.current[moveNumber.current] = { notation: '', steps: [] }
-          dispatch({ type: 'select', square: target })
-          setHero(board[target])
-        }
-      }
+    } else {
+      // setup position
+      dispatch({ type: 'place', to: target, code: inventory })
     }
   }
+
 
   const size = BOARD_SIZE + MARGIN + MARGIN
   return (
@@ -175,6 +197,32 @@ export function Board(props: Props) {
           pieces={pieces}
           hero={hero} />
       </svg>
+      {mode === 'setup' &&
+        <>
+          <button onClick={() => setInventory('M')}>White Man</button>
+          <button onClick={() => setInventory('K')}>White King</button>
+          <button onClick={() => setInventory('m')}>Black Man</button>
+          <button onClick={() => setInventory('k')}>Black King</button>
+          <button onClick={() => dispatch(
+            {
+              type: 'restore',
+              with: {
+                board: Array(64).fill(null),
+                pieces: Array(24).fill('')
+              }
+            })}>
+            Clear
+          </button>
+          <button onClick={() => dispatch({ type: 'restore', with: newGame() })}>
+            Init
+          </button>
+          {onSetupPosition &&
+            <button onClick={() => onSetupPosition(snapshot(board, pieces, whitesTurn))}>
+              Save
+            </button>
+          }
+        </>
+      }
     </div >
   )
 }

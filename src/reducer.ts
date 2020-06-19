@@ -21,6 +21,7 @@ export type Action =
   } |
   { type: 'move', from: number, to: number } |
   { type: 'remove', from: number } |
+  { type: 'place', to: number, code: 'm' | 'k' | 'M' | 'K' } |
   // interaction related actions
   { type: 'select', square: number } |
   { type: 'hoop', square: number } |
@@ -82,6 +83,24 @@ export function reducer(state: State, action: Action): State {
         pieces: [
           ...pieces.slice(0, id),
           '',
+          ...pieces.slice(id + 1)
+        ],
+        stage,
+        notation
+      }
+    }
+    case 'place': {
+      let id = pieces.findIndex(p => p === '')
+      if (id === -1) id = pieces.length
+      return {
+        board: [
+          ...board.slice(0, action.to),
+          id,
+          ...board.slice(action.to + 1)
+        ],
+        pieces: [
+          ...pieces.slice(0, id),
+          action.code,
           ...pieces.slice(id + 1)
         ],
         stage,
