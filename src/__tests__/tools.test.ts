@@ -51,8 +51,8 @@ describe('board', () => {
 
   describe('function "snapshot"', () => {
     it('returns correct representation', () => {
-      const { board, pieces, whitesTurn } = setUp('whites: b2 c3, blacks: f6 g7')
-      expect(snapshot(board, pieces, whitesTurn)).toBe('Whites: b2 c3, Blacks: f6 g7')
+      const { board, pieces, whitesTurn } = setUp('whites: king b2 man c3, blacks: king f6 man g7')
+      expect(snapshot(board, pieces, whitesTurn)).toBe('Whites: king b2 man c3, Blacks: king f6 man g7')
     })
 
     it('respects blacks turn', () => {

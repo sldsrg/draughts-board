@@ -1,5 +1,5 @@
 import { reducer, State, INITIAL_STATE } from '../reducer'
-import { c3, d4, e1, c7, a1, c1 } from './utils/namedSquares'
+import { b8, c3, d4, e1, c7, a1, c1 } from './utils/namedSquares'
 import { newGame, setUp } from '../tools'
 
 describe('reducer', () => {
@@ -11,6 +11,39 @@ describe('reducer', () => {
       const res = reducer(state, { type: 'move', from: c3, to: d4 })
       expect(res.board[c3]).toBeNull()
       expect(res.board[d4]).toBe(key)
+    })
+  })
+
+  describe('action "place"', () => {
+    it('on empty square add a new piece', () => {
+      const state = INITIAL_STATE
+      const res = reducer(state, { type: 'place', to: b8, code: 'm' })
+      expect(res.board[b8]).not.toBeNull()
+      const key = res.board[b8] as number
+      expect(res.pieces[key]).toBe('m')
+      expect(res.board.filter(item => item !== null)).toHaveLength(1)
+      expect(res.pieces.filter(item => item === 'm')).toHaveLength(1)
+    })
+
+    it('on square occupied by piece with different code replace old with new one', () => {
+      const state = { ...INITIAL_STATE, ...setUp('d4, c3') }
+      const res = reducer(state, { type: 'place', to: c3, code: 'K' })
+      expect(res.board[c3]).not.toBeNull()
+      const key = res.board[c3] as number
+      expect(res.pieces[key]).toBe('K')
+      expect(res.board.filter(item => item !== null)).toHaveLength(2)
+      expect(res.pieces.filter(item => item === 'M')).toHaveLength(1)
+      expect(res.pieces.filter(item => item === 'm')).toHaveLength(0)
+      expect(res.pieces.filter(item => item === 'K')).toHaveLength(1)
+    })
+
+    it('empties square occupied by piece with same code', () => {
+      const state = { ...INITIAL_STATE, ...setUp('d4, c3') }
+      const res = reducer(state, { type: 'place', to: c3, code: 'm' })
+      expect(res.board[c3]).toBeNull()
+      expect(res.board.filter(item => item !== null)).toHaveLength(1)
+      expect(res.pieces.filter(item => item === 'M')).toHaveLength(1)
+      expect(res.pieces.filter(item => item === 'm')).toHaveLength(0)
     })
   })
 

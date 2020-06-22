@@ -24,6 +24,6 @@ export default {
     }),
     resolve(),
     commonjs(),
-    visualizer()
+    // visualizer()
   ]
 }

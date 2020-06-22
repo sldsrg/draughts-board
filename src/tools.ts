@@ -60,22 +60,55 @@ export function snapshot(
   board: Array<number | null>,
   pieces: string[],
   whitesTurn: boolean): string {
-  const whites = pieces
+  const whiteKings = pieces
     .map((p, i) => {
-      if (p === null || 'mk'.includes(p)) return null
+      if (p !== 'K') return null
       const field = Field.fromIndex(board.findIndex(s => s === i))
       return field.toString()
     })
     .filter(p => p !== null)
     .sort()
-  const blacks = pieces
+  const whiteMans = pieces
     .map((p, i) => {
-      if (p === null || 'MK'.includes(p)) return null
+      if (p !== 'M') return null
       const field = Field.fromIndex(board.findIndex(s => s === i))
       return field.toString()
     })
     .filter(p => p !== null)
     .sort()
+  const blackKings = pieces
+    .map((p, i) => {
+      if (p !== 'k') return null
+      const field = Field.fromIndex(board.findIndex(s => s === i))
+      return field.toString()
+    })
+    .filter(p => p !== null)
+    .sort()
+  const blackMans = pieces
+    .map((p, i) => {
+      if (p !== 'm') return null
+      const field = Field.fromIndex(board.findIndex(s => s === i))
+      return field.toString()
+    })
+    .filter(p => p !== null)
+    .sort()
+
+  const whites: Array<string> = []
+  if (whiteKings.length > 1) whites.push(`kings ${whiteKings.join(' ')}`)
+  else if (whiteKings.length === 1) whites.push(`king ${whiteKings[0]}`)
+  // omit word 'mans' if no kings
+  if (whiteKings.length === 0) whites.push(whiteMans.join(' '))
+  else if (whiteMans.length > 1) whites.push(`mans ${whiteMans.join(' ')}`)
+  else if (whiteMans.length === 1) whites.push(`man ${whiteMans[0]}`)
+
+  const blacks: Array<string> = []
+  if (blackKings.length > 1) blacks.push(`kings ${blackKings.join(' ')}`)
+  else if (blackKings.length === 1) blacks.push(`king ${blackKings[0]}`)
+  // omit word 'mans' if no kings
+  if (blackKings.length === 0) blacks.push(blackMans.join(' '))
+  else if (blackMans.length > 1) blacks.push(`mans ${blackMans.join(' ')}`)
+  else if (blackMans.length === 1) blacks.push(`man ${blackMans[0]}`)
+
   const res = `Whites: ${whites.join(' ')}, Blacks: ${blacks.join(' ')}`
   if (whitesTurn) return res
   else return res + ' blacks turn'

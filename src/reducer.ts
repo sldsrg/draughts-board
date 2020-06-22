@@ -62,7 +62,7 @@ export function reducer(state: State, action: Action): State {
         ]
         return { board: nextBoard, pieces: nextPieces, stage, notation }
       }
-      if (pieces[id] === 'm' && action.to > 54) {
+      if (pieces[id] === 'm' && action.to > 55) {
         const nextPieces = [
           ...pieces.slice(0, id),
           'k',
@@ -90,8 +90,28 @@ export function reducer(state: State, action: Action): State {
       }
     }
     case 'place': {
-      let id = pieces.findIndex(p => p === '')
-      if (id === -1) id = pieces.length
+      let id = board[action.to]
+      if (id === null) {
+        // empty square
+        id = pieces.findIndex(p => p === '')
+        if (id === -1) id = pieces.length
+      } else if (pieces[id] === action.code) {
+        // clear if code matches
+        return {
+          board: [
+            ...board.slice(0, action.to),
+            null,
+            ...board.slice(action.to + 1)
+          ],
+          pieces: [
+            ...pieces.slice(0, id),
+            '',
+            ...pieces.slice(id + 1)
+          ],
+          stage,
+          notation
+        }
+      }
       return {
         board: [
           ...board.slice(0, action.to),
