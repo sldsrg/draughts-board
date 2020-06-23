@@ -116,7 +116,7 @@ describe('Board component', () => {
         jest.runAllTimers()
       })
       expect(rr.queryByRole('highlight')).toBeNull()
-      const piece = rr.getByTestId('piece13')
+      const piece = rr.getByTestId('piece42')
       const style = window.getComputedStyle(piece)
       const { x, y } = centerOf(d4)
       expect(style.transform).toBe(`translate(${x}px,${y}px)`)
@@ -168,7 +168,7 @@ describe('Board component', () => {
 
       it('removes captured piece if there is one', () => {
         const rr = render(<Board position='e5, f6 h6' />)
-        expect(rr.queryByTestId('piece1')).not.toBeNull()
+        expect(rr.queryByTestId('piece21')).not.toBeNull()
         act(() => {
           fireEvent.click(rr.getByRole('e5')) // select piece
         })
@@ -176,7 +176,7 @@ describe('Board component', () => {
           fireEvent.click(rr.getByRole('g7')) // make move
           jest.runAllTimers()
         })
-        expect(rr.queryByTestId('piece1')).toBeNull()
+        expect(rr.queryByTestId('piece21')).toBeNull()
       })
 
       it('moves selection if capture continuation available', () => {
@@ -220,7 +220,7 @@ describe('Board component', () => {
           fireEvent.click(rr.getByRole('d8')) // make move
           jest.runAllTimers()
         })
-        expect(rr.queryByTestId('piece0')).toHaveAttribute('role', 'white-king')
+        expect(rr.queryByTestId('piece10')).toHaveAttribute('role', 'white-king')
       })
 
       it('promote black man to king on the lowest row', () => {
@@ -232,7 +232,7 @@ describe('Board component', () => {
           fireEvent.click(rr.getByRole('e1')) // make move
           jest.runAllTimers()
         })
-        expect(rr.queryByTestId('piece1')).toHaveAttribute('role', 'black-king')
+        expect(rr.queryByTestId('piece51')).toHaveAttribute('role', 'black-king')
       })
     })
 
@@ -242,7 +242,7 @@ describe('Board component', () => {
         it('properly changes position when passed single move', () => {
           const rr = render(<Board moves={['e3-d4']} />)
           act(runAllTimers)
-          const piece = rr.getByTestId('piece14')
+          const piece = rr.getByTestId('piece44')
           const { x, y } = centerOf(d4)
           const style = window.getComputedStyle(piece)
           expect(style.transform).toBe(`translate(${x}px,${y}px)`)
@@ -251,14 +251,14 @@ describe('Board component', () => {
         it('properly changes position when passed two moves', () => {
           const rr = render(<Board moves={['e3-d4', 'd6-e5']} />)
           act(runAllTimers)
-          const piece9 = rr.getByTestId('piece9')
-          const piece14 = rr.getByTestId('piece14')
-          const { x: x9, y: y9 } = centerOf(e5)
-          const { x: x14, y: y14 } = centerOf(d4)
-          const style9 = window.getComputedStyle(piece9)
-          expect(style9.transform).toBe(`translate(${x9}px,${y9}px)`)
-          const style14 = window.getComputedStyle(piece14)
-          expect(style14.transform).toBe(`translate(${x14}px,${y14}px)`)
+          const piece19 = rr.getByTestId('piece19')
+          const piece44 = rr.getByTestId('piece44')
+          const { x: x19, y: y19 } = centerOf(e5)
+          const { x: x44, y: y44 } = centerOf(d4)
+          const style19 = window.getComputedStyle(piece19)
+          expect(style19.transform).toBe(`translate(${x19}px,${y19}px)`)
+          const style44 = window.getComputedStyle(piece44)
+          expect(style44.transform).toBe(`translate(${x44}px,${y44}px)`)
         })
 
         it('moves with capture change material balance', () => {
@@ -339,7 +339,7 @@ describe('Board component', () => {
         it('properly changes position when passed single move', () => {
           const rr = render(<Board position='c3, b6' moves={['c3-d4']} />)
           act(runAllTimers)
-          const piece = rr.getByTestId('piece0')
+          const piece = rr.getByTestId('piece42')
           const { x, y } = centerOf(d4)
           const style = window.getComputedStyle(piece)
           expect(style.transform).toBe(`translate(${x}px,${y}px)`)

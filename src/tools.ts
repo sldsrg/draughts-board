@@ -1,26 +1,31 @@
-import { State, Action } from './reducer'
+import { Action, Inventory } from './reducer'
 import { Vector } from './vector'
 import { Field } from './field'
 
+export const isWhite = (code: 'm' | 'k' | 'M' | 'K' | null) => code === 'M' || code === 'K'
+export const isMan = (code: 'm' | 'k' | 'M' | 'K' | null) => code === 'M' || code === 'm'
+
 export function newGame(): {
   board: Array<number | null>,
-  pieces: string[],
+  pieces: Inventory,
   whitesTurn: boolean
 } {
-  let key = 0
-  const pieces = 'mmmmmmmmmmmmMMMMMMMMMMMM'.split('')
-  const board = Array(64).fill(null).map((v, i) => {
+  const pieces: Inventory = Array(64).fill(null)
+  const board = Array(64).fill(null)
+  for (let i = 0; i < 64; i++) {
     const row = i >> 3
     const column = i - (row << 3)
-    if (row % 2 !== column % 2 && row !== 3 && row !== 4) return key++
-    return v
-  })
+    if (row % 2 !== column % 2 && row !== 3 && row !== 4) {
+      board[i] = i
+      pieces[i] = row > 4 ? 'M' : 'm'
+    }
+  }
   return { board, pieces, whitesTurn: true }
 }
 
 export function setUp(s: string): {
   board: Array<number | null>,
-  pieces: string[],
+  pieces: Inventory,
   whitesTurn: boolean
 } {
   /// examples:
@@ -39,17 +44,18 @@ export function setUp(s: string): {
   const res = gre.exec(s)
   if (!res) throw new Error(`Incorrect position description: ${s}`)
   const board = Array(64).fill(null)
-  const pieces: string[] = []
-  let key = 0
+  const pieces: Inventory = Array(64).fill(null)
   for (let i = 1; i < 5; i++) {
     if (!res[i]) continue
-    const isWhite = i < 3
-    const isKing = i % 2 === 1
+
     res[i].trim().split(' ').forEach(sq => {
       const square = Field.parse(sq)
-      const piece = (isKing ? 'k' : 'm')
-      pieces.push(isWhite ? piece.toUpperCase() : piece)
-      board[square] = key++
+      board[square] = square
+      if (i < 3) {
+        pieces[square] = i % 2 === 1 ? 'K' : 'M'
+      } else {
+        pieces[square] = i % 2 === 1 ? 'k' : 'm'
+      }
     })
   }
   const whitesTurn = !res[5]
@@ -58,7 +64,7 @@ export function setUp(s: string): {
 
 export function snapshot(
   board: Array<number | null>,
-  pieces: string[],
+  pieces: Inventory,
   whitesTurn: boolean): string {
   const whiteKings = pieces
     .map((p, i) => {
@@ -123,12 +129,11 @@ export function snapshot(
  */
 export function parseMove(
   board: Array<number | null>,
-  pieces: string[],
+  pieces: Inventory,
   from: number, to: number): null | Action[] {
   const piece = board[from]
   if (piece === null) return null
   const pieceCode = pieces[piece]
-  const isWhite = 'MK'.includes(pieceCode)
   if (board[to] !== null) return null // target square is occupied
 
   const vector = Vector.get(from, to)
@@ -136,15 +141,15 @@ export function parseMove(
   const step = vector.step
   const actions: Action[] = []
 
-  if ('Mm'.includes(pieceCode)) { // it’s a man’s move
+  if (isMan(pieceCode)) { // it’s a man’s move
     if (vector.isUnit) { // quiet move
-      if (isWhite === (to - from > 0)) return null // forwards only
+      if (isWhite(pieceCode) === (to - from > 0)) return null // forwards only
     } else { // capture
       const next = step.next(from)
       if (next === null) return null
       const trough = board[next]
       if (trough === null) return null
-      if (isWhite === 'MK'.includes(pieces[trough])) return null
+      if (isWhite(pieceCode) === isWhite(pieces[trough])) return null
       actions.push({ type: 'remove', from: next })
     }
   } else { // it’s a king’s move
@@ -154,7 +159,7 @@ export function parseMove(
       const id = board[sq]
       if (id === null) continue
       const code = pieces[id]
-      if ('MK'.includes(code) === isWhite) return null
+      if (isWhite(code) === isWhite(pieceCode)) return null
       if (!quiet) return null
       quiet = false
       actions.push({ type: 'remove', from: sq })
@@ -165,7 +170,7 @@ export function parseMove(
   // checking for obligatory capture
   if (actions.length === 0) {
     const captureCapable = pieces.filter((p, id) => {
-      if ('KM'.includes(p) !== isWhite) return false
+      if (isWhite(p) !== isWhite(pieceCode)) return false
       const square = board.findIndex(i => i === id)
       return shouldCapture(board, pieces, square)
     })
@@ -181,7 +186,7 @@ export function parseMove(
  * return true if piece at given square can capture some piece
  */
 export function shouldCapture(
-  board: Array<number | null>, pieces: string[], square: number
+  board: Array<number | null>, pieces: Inventory, square: number
 ): boolean {
   if (canCaptureOn(board, pieces, square, Vector.NE)) return true
   if (canCaptureOn(board, pieces, square, Vector.NW)) return true
@@ -189,19 +194,19 @@ export function shouldCapture(
   if (canCaptureOn(board, pieces, square, Vector.SW)) return true
   return false
 }
+
 /**
  * canCaptureOn
  *
  * return true if this piece can capture on given direction
  */
 function canCaptureOn(
-  board: Array<number | null>, pieces: string[], from: number, vector: Vector
+  board: Array<number | null>, pieces: Inventory, from: number, vector: Vector
 ): boolean {
   const id = board[from]
   if (id === null) return false
   const code = pieces[id]
-  const isWhite = 'MK'.includes(code)
-  const isMan = 'Mm'.includes(code)
+
   const step = vector.step
   let square = step.next(from)
   if (square === null) return false
@@ -209,11 +214,11 @@ function canCaptureOn(
   square = step.next(square)
   while (square !== null) {
     if (captured !== null) {
-      if (isWhite === 'MK'.includes(pieces[captured])) return false
+      if (isWhite(code) === isWhite(pieces[captured])) return false
       if (board[square] !== null) return false
       return true
     }
-    if (isMan) return false
+    if (isMan(code)) return false
     captured = board[square]
     square = step.next(square)
   }
@@ -225,7 +230,11 @@ function canCaptureOn(
  *
  * return true if piece at given square can make any move
  */
-export function hasAnyMove(board: Array<number | null>, pieces: string[], square: number): boolean {
+export function hasAnyMove(
+  board: Array<number | null>,
+  pieces: Inventory,
+  square: number
+): boolean {
   if (hasMoveOn(board, pieces, square, Vector.NE)) return true
   if (hasMoveOn(board, pieces, square, Vector.NW)) return true
   if (hasMoveOn(board, pieces, square, Vector.SE)) return true
@@ -234,14 +243,13 @@ export function hasAnyMove(board: Array<number | null>, pieces: string[], square
 }
 
 function hasMoveOn(
-  board: Array<number | null>, pieces: string[], from: number, vector: Vector
+  board: Array<number | null>, pieces: Inventory, from: number, vector: Vector
 ): boolean {
   if (canCaptureOn(board, pieces, from, vector)) return true
   const id = board[from] as number
   const code = pieces[id]
-  const isWhite = 'MK'.includes(code)
-  if ('Mm'.includes(code)) {
-    if (isWhite !== vector.isUp) return false
+  if (isMan(code)) {
+    if (isWhite(code) !== vector.isUp) return false
   }
   const step = vector.step
   const sq = step.next(from)

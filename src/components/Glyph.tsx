@@ -2,10 +2,11 @@ import React from 'react'
 import { FIELD_SIZE } from '../constants'
 
 import css from './Glyph.css'
+import { isWhite, isMan } from '../tools'
 
 interface GlyphProps {
   id: number,
-  code: string,
+  code: 'm' | 'k' | 'M' | 'K' | null,
   square: number,
   selected: boolean,
   onClick: (event: React.MouseEvent) => void
@@ -18,15 +19,13 @@ export function Glyph(props: GlyphProps) {
   const column = square - (row << 3)
   const x = column * FIELD_SIZE + (FIELD_SIZE >> 1)
   const y = row * FIELD_SIZE + (FIELD_SIZE >> 1)
-  const isKing = 'Kk'.includes(code)
-  const isWhite = 'MK'.includes(code)
 
   return (
     <g
-      className={isWhite ? css.whitePiece : css.blackPiece}
+      className={isWhite(code) ? css.whitePiece : css.blackPiece}
       style={{ transform: `translate(${x}px,${y}px)` }}
       data-testid={`piece${id}`}
-      role={`${isWhite ? 'white' : 'black'}-${isKing ? 'king' : 'man'}`}
+      role={`${isWhite(code) ? 'white' : 'black'}-${isMan(code) ? 'man' : 'king'}`}
     >
       {selected && (
         <circle
@@ -38,7 +37,7 @@ export function Glyph(props: GlyphProps) {
           filter="url(#blur)"
         />
       )}
-      <use href={isKing ? '#king' : '#man'} onClick={onClick} />
+      <use href={isMan(code) ? '#man' : '#king'} onClick={onClick} />
     </g>
   )
 }

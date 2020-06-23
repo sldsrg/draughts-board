@@ -4,7 +4,7 @@ import { reducer, INITIAL_STATE } from './reducer'
 import { Definitions } from './components/Definitions'
 import { Scene } from './components/Scene'
 import { Actors } from './components/Actors'
-import { parseMove, setUp, newGame, snapshot } from './tools'
+import { parseMove, setUp, newGame, snapshot, isWhite } from './tools'
 import { Field } from './field'
 import { Job, moveToJobs, StepRecord } from './job'
 
@@ -140,7 +140,7 @@ export function Board(props: Props): JSX.Element {
       const pieceIndex = board[target]
       if (hero !== null) {
         if (pieceIndex !== null) { // keep or move selection
-          if (whitesTurn === 'MK'.includes(pieces[pieceIndex])) {
+          if (whitesTurn === isWhite(pieces[pieceIndex])) {
             dispatch({ type: 'select', square: target })
             setHero(pieceIndex)
           }
@@ -165,7 +165,7 @@ export function Board(props: Props): JSX.Element {
         }
       } else { // select piece
         if (pieceIndex !== null) {
-          if (whitesTurn === 'MK'.includes(pieces[pieceIndex])) {
+          if (whitesTurn === isWhite(pieces[pieceIndex])) {
             history.current[moveNumber.current] = { notation: '', steps: [] }
             dispatch({ type: 'select', square: target })
             setHero(board[target])
@@ -208,7 +208,7 @@ export function Board(props: Props): JSX.Element {
               type: 'restore',
               with: {
                 board: Array(64).fill(null),
-                pieces: Array(24).fill('')
+                pieces: Array(64).fill(null)
               }
             })}>
             Clear

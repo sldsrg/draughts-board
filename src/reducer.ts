@@ -1,10 +1,12 @@
 import { shouldCapture } from './tools'
 import { Field } from './field'
 
+export type Inventory = Array<'m' | 'k' | 'M' | 'K' | null>
+
 export interface State {
   // position related state
   board: Array<number | null>,
-  pieces: string[],
+  pieces: Inventory,
   // interaction related state
   stage: 'idle' | 'initiation' | 'capture' | 'pending',
   notation: string
@@ -16,12 +18,12 @@ export type Action =
   {
     type: 'restore', with: {
       board: Array<number | null>,
-      pieces: string[]
+      pieces: Inventory
     }
   } |
   { type: 'move', from: number, to: number } |
   { type: 'remove', from: number } |
-  { type: 'place', to: number, code: 'm' | 'k' | 'M' | 'K' } |
+  { type: 'place', to: number, code: 'm' | 'k' | 'M' | 'K' | null } |
   // interaction related actions
   { type: 'select', square: number } |
   { type: 'hoop', square: number } |
@@ -29,8 +31,8 @@ export type Action =
   { type: 'reset' }
 
 export const INITIAL_STATE: State = {
-  pieces: [],
   board: Array(64).fill(null),
+  pieces: Array(64).fill(null),
   stage: 'idle',
   notation: ''
 }
@@ -55,7 +57,7 @@ export function reducer(state: State, action: Action): State {
       // check on man-to-king promotion
       const id = nextBoard[action.to] as number
       if (pieces[id] === 'M' && action.to < 8) {
-        const nextPieces = [
+        const nextPieces: Inventory = [
           ...pieces.slice(0, id),
           'K',
           ...pieces.slice(id + 1)
@@ -63,7 +65,7 @@ export function reducer(state: State, action: Action): State {
         return { board: nextBoard, pieces: nextPieces, stage, notation }
       }
       if (pieces[id] === 'm' && action.to > 55) {
-        const nextPieces = [
+        const nextPieces: Inventory = [
           ...pieces.slice(0, id),
           'k',
           ...pieces.slice(id + 1)
@@ -82,7 +84,7 @@ export function reducer(state: State, action: Action): State {
         ],
         pieces: [
           ...pieces.slice(0, id),
-          '',
+          null,
           ...pieces.slice(id + 1)
         ],
         stage,
@@ -90,38 +92,41 @@ export function reducer(state: State, action: Action): State {
       }
     }
     case 'place': {
-      let id = board[action.to]
-      if (id === null) {
-        // empty square
-        id = pieces.findIndex(p => p === '')
-        if (id === -1) id = pieces.length
-      } else if (pieces[id] === action.code) {
-        // clear if code matches
-        return {
-          board: [
-            ...board.slice(0, action.to),
-            null,
-            ...board.slice(action.to + 1)
-          ],
-          pieces: [
-            ...pieces.slice(0, id),
-            '',
-            ...pieces.slice(id + 1)
-          ],
-          stage,
-          notation
+      if (board[action.to] === null) {
+        if (pieces[action.to] !== null)
+          throw 'Action "place" not allowed after any piece move.'
+      }
+      else {
+        if (board[action.to] !== action.to)
+          throw 'Action "place" not allowed after any piece move.'
+        if (pieces[action.to] === action.code) {
+          // clear if code matches
+          return {
+            board: [
+              ...board.slice(0, action.to),
+              null,
+              ...board.slice(action.to + 1)
+            ],
+            pieces: [
+              ...pieces.slice(0, action.to),
+              null,
+              ...pieces.slice(action.to + 1)
+            ],
+            stage,
+            notation
+          }
         }
       }
       return {
         board: [
           ...board.slice(0, action.to),
-          id,
+          action.to,
           ...board.slice(action.to + 1)
         ],
         pieces: [
-          ...pieces.slice(0, id),
+          ...pieces.slice(0, action.to),
           action.code,
-          ...pieces.slice(id + 1)
+          ...pieces.slice(action.to + 1)
         ],
         stage,
         notation

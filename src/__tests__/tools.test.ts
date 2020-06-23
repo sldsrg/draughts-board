@@ -8,18 +8,24 @@ describe('board', () => {
     it('returns corresponding to initial position data', () => {
       const { board, pieces, whitesTurn } = newGame()
       expect(board).toEqual([
-        null, 0, null, 1, null, 2, null, 3,
-        4, null, 5, null, 6, null, 7, null,
-        null, 8, null, 9, null, 10, null, 11,
+        null, 1, null, 3, null, 5, null, 7,
+        8, null, 10, null, 12, null, 14, null,
+        null, 17, null, 19, null, 21, null, 23,
         null, null, null, null, null, null, null, null,
         null, null, null, null, null, null, null, null,
-        12, null, 13, null, 14, null, 15, null,
-        null, 16, null, 17, null, 18, null, 19,
-        20, null, 21, null, 22, null, 23, null
+        40, null, 42, null, 44, null, 46, null,
+        null, 49, null, 51, null, 53, null, 55,
+        56, null, 58, null, 60, null, 62, null
       ])
       expect(pieces).toEqual([
-        'm', 'm', 'm', 'm', 'm', 'm', 'm', 'm', 'm', 'm', 'm', 'm',
-        'M', 'M', 'M', 'M', 'M', 'M', 'M', 'M', 'M', 'M', 'M', 'M'
+        null, 'm', null, 'm', null, 'm', null, 'm',
+        'm', null, 'm', null, 'm', null, 'm', null,
+        null, 'm', null, 'm', null, 'm', null, 'm',
+        null, null, null, null, null, null, null, null,
+        null, null, null, null, null, null, null, null,
+        'M', null, 'M', null, 'M', null, 'M', null,
+        null, 'M', null, 'M', null, 'M', null, 'M',
+        'M', null, 'M', null, 'M', null, 'M', null
       ])
       expect(whitesTurn).toBe(true)
     })
@@ -30,16 +36,25 @@ describe('board', () => {
       const { board, pieces, whitesTurn } =
         setUp('Whites: king d8 mans a1 c1, blacks: king f2 mans h8 h6')
       expect(board).toEqual([
-        null, null, null, 0, null, null, null, 4,
+        null, null, null, 3, null, null, null, 7,
         null, null, null, null, null, null, null, null,
-        null, null, null, null, null, null, null, 5,
+        null, null, null, null, null, null, null, 23,
         null, null, null, null, null, null, null, null,
         null, null, null, null, null, null, null, null,
         null, null, null, null, null, null, null, null,
-        null, null, null, null, null, 3, null, null,
-        1, null, 2, null, null, null, null, null
+        null, null, null, null, null, 53, null, null,
+        56, null, 58, null, null, null, null, null
       ])
-      expect(pieces).toEqual(['K', 'M', 'M', 'k', 'm', 'm'])
+      expect(pieces).toEqual([
+        null, null, null, 'K', null, null, null, 'm',
+        null, null, null, null, null, null, null, null,
+        null, null, null, null, null, null, null, 'm',
+        null, null, null, null, null, null, null, null,
+        null, null, null, null, null, null, null, null,
+        null, null, null, null, null, null, null, null,
+        null, null, null, null, null, 'k', null, null,
+        'M', null, 'M', null, null, null, null, null
+      ])
       expect(whitesTurn).toBe(true)
     })
 

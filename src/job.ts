@@ -1,6 +1,8 @@
+import { Inventory } from './reducer'
+
 export interface StepRecord {
   board: Array<number | null>,
-  pieces: string[]
+  pieces: Inventory
 }
 
 export type Job =

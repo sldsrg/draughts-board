@@ -53,7 +53,7 @@ describe('reducer', () => {
       const key = state.board[c3] as number
       const res = reducer(state, { type: 'remove', from: c3 })
       expect(res.board[c3]).toBeNull()
-      expect(res.pieces[key]).toBe('')
+      expect(res.pieces[key]).toBeNull()
     })
   })
 

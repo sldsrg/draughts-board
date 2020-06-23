@@ -2,10 +2,11 @@ import React from 'react'
 import { TransitionGroup, CSSTransition } from 'react-transition-group'
 import { Glyph } from './Glyph'
 import css from './Actors.css'
+import { Inventory } from '../reducer'
 
 interface ActorsProps {
   board: Array<number | null>,
-  pieces: string[],
+  pieces: Inventory,
   hero: number | null,
   onClick: (id: number) => void
 }
@@ -17,7 +18,7 @@ export function Actors(props: ActorsProps) {
     {[
       ...pieces
         .map((code, index) => ({ code, id: index }))
-        .filter(({ code, id }) => code !== '' && id !== hero)
+        .filter(({ code, id }) => code !== null && id !== hero)
         .map(({ code, id }) => {
           return (
             <CSSTransition
